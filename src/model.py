@@ -21,7 +21,15 @@ class ImageClassifier(pl.LightningModule):
         preds = log_probs.argmax(axis=1)
         loss = F.nll_loss(log_probs, labels)
         metrics = get_classification_metrics(labels.cpu(), preds.cpu())
-        self.log(f"{stage}/loss", loss, on_step=False, on_epoch=True)
+        self.log(f"{stage}/loss", loss, on_step=False, on_epoch=True, logger=True)
+        self.log(
+            f"{stage}/acc",
+            metrics["accuracy"],
+            on_step=False,
+            on_epoch=True,
+            prog_bar=False,
+        )
+
         return loss
 
     def training_step(self, batch, batch_idx):
@@ -32,8 +40,8 @@ class ImageClassifier(pl.LightningModule):
 
     def test_step(self, batch, batch_idx):
         x, labels = batch
-        preds = self.net(x)
-        preds = preds.argmax(axis=1)
+        log_probs = self.net(x)
+        preds = log_probs.argmax(axis=1)
         return preds
 
     def configure_optimizers(self):
