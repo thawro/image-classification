@@ -34,11 +34,6 @@ def create_model(cfg: DictConfig, datamodule: ImageDataModule):
 def main(cfg: DictConfig):
     print_config_tree(cfg, keys="all")
     datamodule = create_datamodule(cfg)
-    train_fig = datamodule.plot_images(split="train")
-    val_fig = datamodule.plot_images(split="val")
-    train_fig.savefig("train.png")
-    val_fig.savefig("val.png")
-    # datamodule.plot_images(split="test")
     model = create_model(cfg, datamodule)
     logger = instantiate(cfg.logger)
     trainer = instantiate(cfg.trainer, logger=logger)
