@@ -130,5 +130,6 @@ dmypy.json
 
 data/*
 lightning_logs/*
+hydra_logs/*
 lit-wandb/*
 wandb/*

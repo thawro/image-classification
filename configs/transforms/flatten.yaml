@@ -1,0 +1,10 @@
+flatten:
+  train:
+    _target_: torch.nn.Flatten
+    start_dim: 0
+    end_dim: -1
+
+  inference:
+    _target_: torch.nn.Flatten
+    start_dim: 0
+    end_dim: -1

@@ -1,32 +1,47 @@
-from torch import nn
 from torchvision import transforms as T
 import hydra
-from omegaconf import DictConfig, OmegaConf
-import torch
+from hydra.utils import instantiate
+from omegaconf import DictConfig
+from data.datamodule import ImageDataModule
+from utils import print_config_tree
+
+
+def create_datamodule(cfg: DictConfig) -> ImageDataModule:
+    transforms = cfg.transforms.items()
+    train_transform = T.Compose([instantiate(transform["train"]) for _, transform in transforms])
+    inference_transform = T.Compose([instantiate(transform["inference"]) for _, transform in transforms])
+    datamodule = instantiate(cfg.datamodule)(train_transform=train_transform, inference_transform=inference_transform)
+    datamodule.download_data()
+    datamodule.setup(stage="fit")
+    return datamodule
+
+
+def create_model(cfg: DictConfig, datamodule: ImageDataModule):
+    feature_extractor_name = cfg.feature_extractor._target_.split(".")[-1]
+    sample_shape = datamodule.train[0][0].shape
+    if any([name in feature_extractor_name.lower() for name in ["resnet", "cnn"]]):  # ResNet, DeepCNN
+        in_channels = sample_shape[0]
+        feature_extractor = instantiate(cfg.feature_extractor)(in_channels=in_channels)
+    else:  # MLP
+        in_dim = sample_shape.numel()
+        feature_extractor = instantiate(cfg.feature_extractor)(in_dim=in_dim)
+    head = instantiate(cfg.head)(feature_extractor.out_shape, datamodule.n_classes)
+    model = instantiate(cfg.model)(feature_extractor=feature_extractor, head=head)
+    return model
 
 
 @hydra.main(version_base=None, config_path="../configs", config_name="train")
 def main(cfg: DictConfig):
-    # mean = [0.485, 0.456, 0.406]
-    # std = [0.229, 0.224, 0.225]
-    mean = [0.1307]
-    std = [0.3081]
-    transform = T.Compose(
-        [
-            T.ToTensor(),
-            T.Normalize(mean=mean, std=std),
-            # nn.Flatten(start_dim=0, end_dim=-1),
-        ]
-    )
-    datamodule = hydra.utils.instantiate(cfg.datamodule)(transform=transform)
-    datamodule.download_data()
-    datamodule.setup(stage="fit")
-    # feature_extractor = hydra.utils.instantiate(cfg.feature_extractor)(in_dim=28 * 28)
-    feature_extractor = hydra.utils.instantiate(cfg.feature_extractor)(in_channels=1)
-    head = hydra.utils.instantiate(cfg.head)(feature_extractor.out_shape, datamodule.n_classes)
-    model = hydra.utils.instantiate(cfg.model)(feature_extractor=feature_extractor, head=head)
-    logger = hydra.utils.instantiate(cfg.logger)
-    trainer = hydra.utils.instantiate(cfg.trainer, logger=logger)
+    print_config_tree(cfg, keys="all")
+    datamodule = create_datamodule(cfg)
+    train_fig = datamodule.plot_images(split="train")
+    val_fig = datamodule.plot_images(split="val")
+    train_fig.savefig("train.png")
+    val_fig.savefig("val.png")
+    # datamodule.plot_images(split="test")
+    model = create_model(cfg, datamodule)
+    logger = instantiate(cfg.logger)
+    trainer = instantiate(cfg.trainer, logger=logger)
     trainer.fit(model, datamodule=datamodule)
 
 
