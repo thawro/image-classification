@@ -1,0 +1,33 @@
+project_name: image_classification
+run_name: test
+datamodule:
+  _target_: src.data.MNISTDatamodule
+  data_dir: ../data
+  _partial_: true
+  batch_size: 64
+  seed: ${seed}
+feature_extractor:
+  _target_: src.architectures.mlp.MLP
+  _partial_: true
+  hidden_dims:
+  - 512
+  - 256
+  - 128
+logger:
+  _target_: lightning.pytorch.loggers.WandbLogger
+  save_dir: ${hydra:run.dir}
+  project: ${project_name}
+  name: ${run_name}
+model:
+  _target_: src.model.ImageClassifier
+  _partial_: true
+  lr: 0.001
+paths:
+  log_dir: hydra_logs
+  output_dir: ${hydra:runtime.output_dir}
+trainer:
+  _target_: pytorch_lightning.Trainer
+  accelerator: auto
+  devices: 1
+  max_epochs: 100
+  deterministic: true

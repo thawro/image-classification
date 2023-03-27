@@ -1,4 +1,6 @@
+# from lightning.pytorch import LightningDataModule
 from pytorch_lightning import LightningDataModule
+
 from torchvision.datasets import MNIST, CIFAR10, CIFAR100
 from torchvision import transforms as T
 from torch.utils.data import DataLoader, random_split, Dataset
@@ -32,20 +34,18 @@ class ImageDataModule(LightningDataModule):
 
     def setup(self, stage: Optional[str] = None):
         if stage == "fit" or stage is None:
-            data = self.data_loading_fn(
-                self.data_dir, train=True, transform=self.transform
-            )
+            data = self.data_loading_fn(self.data_dir, train=True, transform=self.transform)
             val_pcnt = 0.1
             n_val = int(len(data) * val_pcnt)
             n_train = len(data) - n_val
             generator = torch.Generator().manual_seed(self.seed)
-            self.train, self.val = random_split(
-                data, [n_train, n_val], generator=generator
-            )
+            self.train, self.val = random_split(data, [n_train, n_val], generator=generator)
         if stage == "test" or stage is None:
-            self.test = self.data_loading_fn(
-                self.data_dir, train=False, transform=self.transform
-            )
+            self.test = self.data_loading_fn(self.data_dir, train=False, transform=self.transform)
+
+    @property
+    def n_classes(self):
+        return len(self.train.dataset.classes)
 
     def plot_images(self, split: str, n=10, transform: Optional[Callable] = None):
         dataset = getattr(self, split).dataset
@@ -59,9 +59,7 @@ class ImageDataModule(LightningDataModule):
             ax.set_title(f"{dataset.classes[label]}", fontsize=16)
 
     def train_dataloader(self):
-        return DataLoader(
-            self.train, batch_size=self.batch_size, shuffle=True, num_workers=16
-        )
+        return DataLoader(self.train, batch_size=self.batch_size, shuffle=True, num_workers=16)
 
     def val_dataloader(self):
         return DataLoader(self.val, batch_size=10 * self.batch_size, num_workers=16)

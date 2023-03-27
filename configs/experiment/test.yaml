@@ -1,0 +1,10 @@
+# @package _global_
+
+defaults:
+  - override /datamodule: mnist.yaml
+  - override /feature_extractor: mlp.yaml
+  - override /head: default.yaml
+  - override /hydra: default.yaml
+  - override /model: default.yaml
+
+run_name: test

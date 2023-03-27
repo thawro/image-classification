@@ -1,0 +1,129 @@
+{
+    "os": "Linux-5.15.0-56-generic-x86_64-with-glibc2.31",
+    "python": "3.11.2",
+    "heartbeatAt": "2023-03-27T12:50:11.076387",
+    "startedAt": "2023-03-27T12:50:09.857198",
+    "docker": null,
+    "cuda": null,
+    "args": [
+        "experiment=test",
+        "run_name=cnn_test",
+        "feature_extractor=deep_cnn"
+    ],
+    "state": "running",
+    "program": "/home/shate/Desktop/projects/cnn-image-classification/src/train.py",
+    "codePath": "src/train.py",
+    "git": {
+        "remote": "https://github.com/thawro/cnn-image-classification.git",
+        "commit": "359cbbd739d85738464363a163f0b69798c54f93"
+    },
+    "email": "tomashawro.kontakt@gmail.com",
+    "root": "/home/shate/Desktop/projects/cnn-image-classification",
+    "host": "shate",
+    "username": "shate",
+    "executable": "/usr/bin/python3.11",
+    "cpu_count": 8,
+    "cpu_count_logical": 16,
+    "cpu_freq": {
+        "current": 2270.7423125,
+        "min": 800.0,
+        "max": 4600.0
+    },
+    "cpu_freq_per_core": [
+        {
+            "current": 2300.0,
+            "min": 800.0,
+            "max": 4600.0
+        },
+        {
+            "current": 2300.0,
+            "min": 800.0,
+            "max": 4600.0
+        },
+        {
+            "current": 2300.0,
+            "min": 800.0,
+            "max": 4600.0
+        },
+        {
+            "current": 2300.0,
+            "min": 800.0,
+            "max": 4600.0
+        },
+        {
+            "current": 2300.0,
+            "min": 800.0,
+            "max": 4600.0
+        },
+        {
+            "current": 2300.0,
+            "min": 800.0,
+            "max": 4600.0
+        },
+        {
+            "current": 2300.0,
+            "min": 800.0,
+            "max": 4600.0
+        },
+        {
+            "current": 2300.0,
+            "min": 800.0,
+            "max": 4600.0
+        },
+        {
+            "current": 2300.0,
+            "min": 800.0,
+            "max": 4600.0
+        },
+        {
+            "current": 2300.0,
+            "min": 800.0,
+            "max": 4600.0
+        },
+        {
+            "current": 1831.877,
+            "min": 800.0,
+            "max": 4600.0
+        },
+        {
+            "current": 2300.0,
+            "min": 800.0,
+            "max": 4600.0
+        },
+        {
+            "current": 2300.0,
+            "min": 800.0,
+            "max": 4600.0
+        },
+        {
+            "current": 2300.0,
+            "min": 800.0,
+            "max": 4600.0
+        },
+        {
+            "current": 2300.0,
+            "min": 800.0,
+            "max": 4600.0
+        },
+        {
+            "current": 2300.0,
+            "min": 800.0,
+            "max": 4600.0
+        }
+    ],
+    "disk": {
+        "total": 671.7940979003906,
+        "used": 287.27093505859375
+    },
+    "gpu": "NVIDIA GeForce RTX 3070 Laptop GPU",
+    "gpu_count": 1,
+    "gpu_devices": [
+        {
+            "name": "NVIDIA GeForce RTX 3070 Laptop GPU",
+            "memory_total": 8589934592
+        }
+    ],
+    "memory": {
+        "total": 30.998497009277344
+    }
+}

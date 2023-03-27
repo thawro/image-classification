@@ -1,0 +1,7 @@
+_target_: architectures.feature_extractors.resnet.ResNet
+_partial_: True # in_channels must be set
+stem_channels: 32
+stem_kernel_size: 5
+pool_kernel_size: 2
+stages_n_blocks: [2, 2, 2]
+block_type: basic

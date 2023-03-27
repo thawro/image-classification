@@ -1,19 +1,23 @@
 import torch.nn.functional as F
 from evaluation import get_classification_metrics
-import pytorch_lightning as pl
+
+# from lightning.pytorch import LightningModule
+from pytorch_lightning import LightningModule
 import torch
 from torch import nn
 
 
-class ImageClassifier(pl.LightningModule):
-    def __init__(self, net: nn.Module, lr: float = 1e-3):
+class ImageClassifier(LightningModule):
+    def __init__(self, feature_extractor: nn.Module, head: nn.Module, lr: float = 1e-3):
         super().__init__()
-        self.net = net
+        self.feature_extractor = feature_extractor
+        self.head = head
         self.lr = lr
         self.save_hyperparameters()
 
     def forward(self, x):
-        return self.net(x)
+        features = self.feature_extractor(x)
+        return self.head(features)
 
     def _common_step(self, batch, batch_idx, stage):
         x, labels = batch
@@ -27,7 +31,7 @@ class ImageClassifier(pl.LightningModule):
             metrics["accuracy"],
             on_step=False,
             on_epoch=True,
-            prog_bar=False,
+            prog_bar=True,
         )
 
         return loss
