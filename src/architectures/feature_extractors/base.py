@@ -1,9 +1,10 @@
-import torch
 from torch import nn
 from abc import abstractmethod
 
 
 class FeatureExtractor(nn.Module):
+    name: str = ""
+
     def __init__(self):
         super().__init__()
         self.net = nn.Identity()

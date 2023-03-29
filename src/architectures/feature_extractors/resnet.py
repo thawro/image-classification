@@ -159,6 +159,8 @@ class BasicResNetCore(nn.Module):
 
 
 class ResNet(FeatureExtractor):
+    name: str = "ResNet"
+
     def __init__(
         self,
         in_channels: int,

@@ -6,6 +6,7 @@ defaults:
   - datamodule: mnist.yaml
   - feature_extractor: mlp.yaml
   - transforms: [permute.yaml]
+  - callbacks: default.yaml
   - head: default.yaml
   - hydra: default.yaml
   - logger: wandb.yaml

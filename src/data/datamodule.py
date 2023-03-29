@@ -34,6 +34,8 @@ class ImageDataset(Dataset):
 
 
 class ImageDataModule(LightningDataModule):
+    name: str = ""
+
     def __init__(
         self,
         data_dir: str = "./data",
@@ -93,22 +95,28 @@ class ImageDataModule(LightningDataModule):
         return DataLoader(self.train, batch_size=self.batch_size, shuffle=True, num_workers=16)
 
     def val_dataloader(self):
-        return DataLoader(self.val, batch_size=10 * self.batch_size, num_workers=16)
+        return DataLoader(self.val, batch_size=self.batch_size, num_workers=16)
 
     def test_dataloader(self):
-        return DataLoader(self.test, batch_size=10 * self.batch_size, num_workers=16)
+        return DataLoader(self.test, batch_size=self.batch_size, num_workers=16)
 
 
 class MNISTDatamodule(ImageDataModule):
+    name: str = "MNIST"
+
     def data_loading_fn(self, *args, **kwargs) -> Dataset:
         return MNIST(*args, **kwargs)
 
 
 class CIFAR10Datamodule(ImageDataModule):
+    name: str = "CIFAR10"
+
     def data_loading_fn(self, *args, **kwargs) -> Dataset:
         return CIFAR10(*args, **kwargs)
 
 
 class CIFAR100Datamodule(ImageDataModule):
+    name: str = "CIFAR100"
+
     def data_loading_fn(self, *args, **kwargs) -> Dataset:
         return CIFAR100(*args, **kwargs)

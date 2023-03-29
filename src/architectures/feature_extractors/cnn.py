@@ -45,6 +45,8 @@ class CNNBlock(nn.Module):
 
 
 class DeepCNN(FeatureExtractor):
+    name: str = "DeepCNN"
+
     def __init__(
         self,
         in_channels: int,

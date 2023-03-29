@@ -28,6 +28,8 @@ class FeedForwardBlock(nn.Module):
 
 
 class MLP(FeatureExtractor):
+    name: str = "MLP"
+
     def __init__(self, in_dim, hidden_dims):
         super().__init__()
         self.hidden_dims = hidden_dims

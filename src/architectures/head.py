@@ -1,6 +1,6 @@
-import torch
 from torch import nn
 import torch.nn.functional as F
+from .feature_extractors.base import FeatureExtractor
 
 
 class ClassificationHead(nn.Module):
@@ -14,7 +14,7 @@ class ClassificationHead(nn.Module):
 
 
 class Classifier(nn.Module):
-    def __init__(self, feature_extractor: nn.Module, head: nn.Module):
+    def __init__(self, feature_extractor: FeatureExtractor, head: nn.Module):
         super().__init__()
         self.feature_extractor = feature_extractor
         self.head = head

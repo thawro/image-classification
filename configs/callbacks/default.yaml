@@ -1,0 +1,4 @@
+defaults:
+  - rich_progress_bar.yaml
+  - early_stopping.yaml
+  - _self_

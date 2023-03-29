@@ -3,6 +3,9 @@ import hydra
 from hydra.utils import instantiate
 from omegaconf import DictConfig
 from data.datamodule import ImageDataModule
+from architectures.head import Classifier
+from pytorch_lightning.loggers.wandb import WandbLogger
+from pytorch_lightning.callbacks import Callback
 from utils import print_config_tree
 
 
@@ -16,7 +19,7 @@ def create_datamodule(cfg: DictConfig) -> ImageDataModule:
     return datamodule
 
 
-def create_model(cfg: DictConfig, datamodule: ImageDataModule):
+def create_model(cfg: DictConfig, datamodule: ImageDataModule) -> Classifier:
     feature_extractor_name = cfg.feature_extractor._target_.split(".")[-1]
     sample_shape = datamodule.train[0][0].shape
     if any([name in feature_extractor_name.lower() for name in ["resnet", "cnn"]]):  # ResNet, DeepCNN
@@ -33,10 +36,13 @@ def create_model(cfg: DictConfig, datamodule: ImageDataModule):
 @hydra.main(version_base=None, config_path="../configs", config_name="train")
 def main(cfg: DictConfig):
     print_config_tree(cfg, keys="all")
-    datamodule = create_datamodule(cfg)
-    model = create_model(cfg, datamodule)
-    logger = instantiate(cfg.logger)
-    trainer = instantiate(cfg.trainer, logger=logger)
+    datamodule: ImageDataModule = create_datamodule(cfg)
+    model: Classifier = create_model(cfg, datamodule)
+    logger: WandbLogger = instantiate(cfg.logger)
+    callbacks: list[Callback] = [instantiate(callback_cfg) for _, callback_cfg in cfg.callbacks.items()]
+    params = {"dataset": datamodule.name, "model": model.feature_extractor.name}
+    logger.log_hyperparams(params)
+    trainer = instantiate(cfg.trainer, logger=logger, callbacks=callbacks)
     trainer.fit(model, datamodule=datamodule)
 
 

@@ -4,7 +4,7 @@ defaults:
   - override /datamodule: mnist.yaml
   - override /feature_extractor: mlp.yaml
   - override /transforms: [permute.yaml, grey_normalize.yaml, rotation.yaml]
-  # - override /transforms: [grey_normalize.yaml]
+  - override /callbacks: default.yaml
   - override /head: default.yaml
   - override /hydra: default.yaml
   - override /model: default.yaml
@@ -14,3 +14,6 @@ run_name: test
 transforms:
   rotation:
     degrees: 10
+
+datamodule:
+  batch_size: 128
