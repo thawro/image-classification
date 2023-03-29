@@ -1,0 +1,20 @@
+# @package _global_
+
+defaults:
+  - _self_
+  # - callbacks: default.yaml
+  - datamodule: mnist.yaml
+  - feature_extractor: mlp.yaml
+  - transforms: [permute.yaml]
+  - callbacks: default.yaml
+  - head: default.yaml
+  - hydra: default.yaml
+  - logger: wandb.yaml
+  - model: default.yaml
+  - paths: default.yaml
+  - trainer: default.yaml
+  - experiment: null
+
+project_name: image_classification
+run_name: test
+seed: 42

@@ -1,0 +1,8 @@
+normalize:
+  train:
+    _target_: data.transforms.ImgNormalize
+    n_channels: 1
+
+  inference:
+    _target_: data.transforms.ImgNormalize
+    n_channels: 1

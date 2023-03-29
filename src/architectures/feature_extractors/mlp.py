@@ -1,11 +1,10 @@
 import torch
 from torch import nn
+from .base import FeatureExtractor
 
 
 class FeedForwardBlock(nn.Module):
-    def __init__(
-        self, in_dim: int, out_dim: int, use_batch_norm: bool = True, dropout: float = 0
-    ):
+    def __init__(self, in_dim: int, out_dim: int, use_batch_norm: bool = True, dropout: float = 0):
         super().__init__()
         self.use_batch_norm = use_batch_norm
         self.use_dropout = dropout > 0
@@ -28,15 +27,17 @@ class FeedForwardBlock(nn.Module):
         return out
 
 
-class MLP(nn.Module):
+class MLP(FeatureExtractor):
+    name: str = "MLP"
+
     def __init__(self, in_dim, hidden_dims):
         super().__init__()
+        self.hidden_dims = hidden_dims
         in_dims = [in_dim] + hidden_dims[:-1]
         n_layers = len(hidden_dims)
-        layers: list[nn.Module] = [
-            FeedForwardBlock(in_dims[i], hidden_dims[i]) for i in range(n_layers)
-        ]
+        layers: list[nn.Module] = [FeedForwardBlock(in_dims[i], hidden_dims[i]) for i in range(n_layers)]
         self.net = nn.Sequential(*layers)
 
-    def forward(self, x):
-        return self.net(x)
+    @property
+    def out_shape(self):
+        return self.hidden_dims[-1]

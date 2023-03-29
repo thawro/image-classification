@@ -1,0 +1,3 @@
+defaults:
+  - grey_normalize.yaml
+  - _self_

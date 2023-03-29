@@ -1,6 +1,8 @@
 import torch
 from torch import nn
 from typing import Literal
+from collections import OrderedDict
+from .base import FeatureExtractor
 
 
 class BasicBlock(nn.Module):
@@ -23,9 +25,7 @@ class BasicBlock(nn.Module):
             )
         else:
             out_channels = in_channels
-        self.conv1 = nn.Conv2d(
-            in_channels, out_channels, kernel_size, stride=stride, padding=1
-        )
+        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size, stride=stride, padding=1)
         self.bn1 = nn.BatchNorm2d(out_channels)
         self.relu = nn.ReLU()
         self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size, padding=1)
@@ -69,9 +69,7 @@ class BottleneckBlock(nn.Module):
         self.conv1 = nn.Conv2d(in_channels, mid_channels, kernel_size=1)
         self.bn1 = nn.BatchNorm2d(mid_channels)
         self.relu = nn.ReLU()
-        self.conv2 = nn.Conv2d(
-            mid_channels, mid_channels, kernel_size, padding=1, stride=stride
-        )
+        self.conv2 = nn.Conv2d(mid_channels, mid_channels, kernel_size, padding=1, stride=stride)
         self.bn2 = nn.BatchNorm2d(mid_channels)
         self.conv3 = nn.Conv2d(mid_channels, out_channels, kernel_size=1)
         self.bn3 = nn.BatchNorm2d(out_channels)
@@ -160,7 +158,9 @@ class BasicResNetCore(nn.Module):
         return self.net(x)
 
 
-class ResNet(nn.Module):
+class ResNet(FeatureExtractor):
+    name: str = "ResNet"
+
     def __init__(
         self,
         in_channels: int,
@@ -171,21 +171,26 @@ class ResNet(nn.Module):
         block_type: Literal["basic", "bottleneck"] = "basic",
     ):
         super().__init__()
-        self.stem_conv = nn.Conv2d(
-            in_channels, stem_channels, stem_kernel_size, stride=2
+        self.stem_channels = stem_channels
+        self.block_type = block_type
+        self.stages_n_blocks = stages_n_blocks
+        ResnetCoreBlocks = BasicResNetCore if block_type == "basic" else BottleneckResNetCore
+        self.net = nn.Sequential(
+            OrderedDict(
+                [
+                    ("stem_conv", nn.Conv2d(in_channels, stem_channels, stem_kernel_size, stride=2)),
+                    ("maxpool", nn.MaxPool2d(kernel_size=pool_kernel_size, stride=2)),
+                    ("residual_layers", ResnetCoreBlocks(in_channels=stem_channels, stages_n_blocks=stages_n_blocks)),
+                    ("global_pool", nn.AdaptiveAvgPool2d((1, 1))),
+                    ("flatten", nn.Flatten()),
+                ]
+            )
         )
-        self.pool = nn.MaxPool2d(kernel_size=pool_kernel_size, stride=2)
-        ResnetCoreBlocks = (
-            BasicResNetCore if block_type == "basic" else BottleneckResNetCore
-        )
-        self.residual_layers = ResnetCoreBlocks(
-            in_channels=stem_channels, stages_n_blocks=stages_n_blocks
-        )
-        self.global_pool = nn.AdaptiveAvgPool2d((1, 1))
 
-    def forward(self, x):
-        out = self.stem_conv(x)
-        out = self.pool(out)
-        out = self.residual_layers(out)
-        out = self.global_pool(out)
-        return out
+    @property
+    def out_shape(self):
+        n_stages = len(self.stages_n_blocks)
+        if self.block_type == "basic":
+            return self.stem_channels * 2 ** (n_stages - 1)
+        else:
+            return self.stem_channels * 2 ** (n_stages - 1) * BottleneckBlock.expansion

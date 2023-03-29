@@ -1,0 +1,6 @@
+to_tensor:
+  train:
+    _target_: torchvision.transforms.ToTensor
+
+  inference:
+    _target_: torchvision.transforms.ToTensor

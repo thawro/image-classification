@@ -1,0 +1,2 @@
+_target_: architectures.head.ClassificationHead
+_partial_: True # in_dim and out_dim must be set

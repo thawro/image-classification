@@ -1,0 +1,4 @@
+_target_: lightning.pytorch.loggers.WandbLogger
+save_dir: ${hydra:run.dir}
+project: ${project_name}
+name: ${run_name}

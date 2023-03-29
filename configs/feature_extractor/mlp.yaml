@@ -1,0 +1,4 @@
+_target_: architectures.feature_extractors.mlp.MLP
+_partial_: True # in_dim must be set
+# in_dim:
+hidden_dims: [512, 256, 128]

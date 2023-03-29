@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+from .base import FeatureExtractor
 
 
 class CNNBlock(nn.Module):
@@ -43,7 +44,9 @@ class CNNBlock(nn.Module):
         return out
 
 
-class DeepCNN(nn.Module):
+class DeepCNN(FeatureExtractor):
+    name: str = "DeepCNN"
+
     def __init__(
         self,
         in_channels: int,
@@ -52,6 +55,7 @@ class DeepCNN(nn.Module):
         pool_kernels: list[int],
     ):
         super().__init__()
+        self.out_channels = out_channels
         layers = [
             CNNBlock(
                 in_channels if i == 0 else out_channels[i - 1],
@@ -60,11 +64,9 @@ class DeepCNN(nn.Module):
                 pool_kernel_size=pool_kernels[i],
             )
             for i in range(len(out_channels))
-        ]
+        ] + [nn.AdaptiveAvgPool2d((1, 1)), nn.Flatten()]
         self.net = nn.Sequential(*layers)
-        self.global_pool = nn.AdaptiveAvgPool2d((1, 1))
 
-    def forward(self, x):
-        out = self.net(x)
-        out = self.global_pool(out)
-        return out
+    @property
+    def out_shape(self):
+        return self.out_channels[-1]
