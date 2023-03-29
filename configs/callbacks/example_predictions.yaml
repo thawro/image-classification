@@ -1,0 +1,3 @@
+example_predictions:
+  _target_: evaluation.callbacks.ExamplePredictionsLogger
+  num_examples: 6

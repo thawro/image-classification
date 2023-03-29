@@ -10,7 +10,7 @@ class ClassificationHead(nn.Module):
 
     def forward(self, x):
         out = self.net(x)
-        return F.log_softmax(out, dim=1)
+        return out
 
 
 class Classifier(nn.Module):

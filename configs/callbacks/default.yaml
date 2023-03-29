@@ -1,4 +1,5 @@
 defaults:
   - rich_progress_bar.yaml
   - early_stopping.yaml
+  - example_predictions.yaml
   - _self_
