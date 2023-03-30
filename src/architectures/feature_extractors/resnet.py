@@ -1,4 +1,5 @@
-import torch
+"""Implementation based on https://arxiv.org/pdf/1512.03385.pdf 
+with modifications suggested in https://github.com/pytorch/vision/blob/main/torchvision/models/resnet.py"""
 from torch import nn
 from typing import Literal
 from collections import OrderedDict
@@ -6,6 +7,15 @@ from .base import FeatureExtractor
 
 
 class BasicBlock(nn.Module):
+    """Basic Residual Block.
+    Pipeline without downsampling:
+    x -> Conv -> BN -> ReLU -> Conv -> BN -> ReLU(out + x)
+
+    If downsampling is present, then shortcut connection is added:
+    Shortcut = Conv1x1 -> BN
+    x -> Conv -> BN -> ReLU -> Conv -> BN -> ReLU(out + Shortcut(x))
+    """
+
     expansion = 1
 
     def __init__(
@@ -16,6 +26,14 @@ class BasicBlock(nn.Module):
         stride: int,
         downsample: bool = False,
     ):
+        """
+        Args:
+            in_channels (int): Number of block input channels.
+            out_channels (int): Number of block output channels.
+            kernel_size (int): Kernel used for both Conv2d layers as `(kernel_size, kernel_size)`.
+            stride (int): Stride used in first Conv2d layer and in optional shortcut.
+            downsample (bool, optional): Whether to apply downsampling. Defaults to False.
+        """
         super().__init__()
         self.downsample = downsample
         if self.downsample:
@@ -45,6 +63,15 @@ class BasicBlock(nn.Module):
 
 
 class BottleneckBlock(nn.Module):
+    """Bottleneck Residual Block.
+    Pipeline without downsampling:
+    x -> Conv1x1 -> BN -> ReLU -> Conv -> BN -> ReLU -> Conv1x1 -> BN -> ReLU(out + x)
+
+    If downsampling is present, then shortcut connection is added:
+    Shortcut = Conv1x1 -> BN
+    x -> Conv1x1 -> BN -> ReLU -> Conv -> BN -> ReLU -> Conv1x1 -> BN -> ReLU(out + Shortcut(x))
+    """
+
     expansion = 4
 
     def __init__(
@@ -55,6 +82,15 @@ class BottleneckBlock(nn.Module):
         stride: int,
         downsample: bool = False,
     ):
+        """
+        Args:
+            in_channels (int): Number of block input channels.
+            mid_channels (int): Number of block bottleneck channels.
+            kernel_size (int): Kernel used for middle Conv2d layer as `(kernel_size, kernel_size)`.
+            stride (int): Stride used in middle Conv2d layer and in optional shortcut.
+            downsample (bool, optional): Whether to apply downsampling. Defaults to False.
+        """
+
         super().__init__()
         self.downsample = downsample
         if self.downsample:
@@ -90,45 +126,19 @@ class BottleneckBlock(nn.Module):
         return self.relu(out + identity)
 
 
-class BottleneckResNetCore(nn.Module):
-    def __init__(
-        self,
-        in_channels: int,
-        stages_n_blocks: list[int],
-    ):
-        super().__init__()
-        mid_channels = in_channels
-        layers = []
-        for stage, n_blocks in enumerate(stages_n_blocks):
-            is_first_stage = stage == 0
-            blocks_layers = []
-            for i in range(n_blocks):
-                is_first_block = i == 0
-                stride = 2 if not is_first_stage and is_first_block else 1
-                block = BottleneckBlock(
-                    in_channels=in_channels,
-                    mid_channels=mid_channels,
-                    kernel_size=3,
-                    stride=stride,
-                    downsample=is_first_block,
-                )
-                in_channels = mid_channels * block.expansion
-                blocks_layers.append(block)
-            mid_channels *= 2
-            blocks_layers = nn.Sequential(*blocks_layers)
-            layers.append(blocks_layers)
-        self.net = nn.Sequential(*layers)
-
-    def forward(self, x):
-        return self.net(x)
-
-
 class BasicResNetCore(nn.Module):
+    """Core Basic Residual layers"""
+
     def __init__(
         self,
         in_channels: int,
         stages_n_blocks: list[int],
     ):
+        """
+        Args:
+            in_channels (int): Number of input channels.
+            stages_n_blocks (list[int]): Number of bottleneck blocks used per stage.
+        """
         super().__init__()
         out_channels = in_channels
         layers = []
@@ -158,7 +168,49 @@ class BasicResNetCore(nn.Module):
         return self.net(x)
 
 
+class BottleneckResNetCore(nn.Module):
+    """Core Bottleneck Residual layers"""
+
+    def __init__(
+        self,
+        in_channels: int,
+        stages_n_blocks: list[int],
+    ):
+        """
+        Args:
+            in_channels (int): Number of input channels.
+            stages_n_blocks (list[int]): Number of bottleneck blocks used per stage.
+        """
+        super().__init__()
+        mid_channels = in_channels
+        layers = []
+        for stage, n_blocks in enumerate(stages_n_blocks):
+            is_first_stage = stage == 0
+            blocks_layers = []
+            for i in range(n_blocks):
+                is_first_block = i == 0
+                stride = 2 if not is_first_stage and is_first_block else 1
+                block = BottleneckBlock(
+                    in_channels=in_channels,
+                    mid_channels=mid_channels,
+                    kernel_size=3,
+                    stride=stride,
+                    downsample=is_first_block,
+                )
+                in_channels = mid_channels * block.expansion
+                blocks_layers.append(block)
+            mid_channels *= 2
+            blocks_layers = nn.Sequential(*blocks_layers)
+            layers.append(blocks_layers)
+        self.net = nn.Sequential(*layers)
+
+    def forward(self, x):
+        return self.net(x)
+
+
 class ResNet(FeatureExtractor):
+    """Convolutional Neural Network with residual connextions"""
+
     name: str = "ResNet"
 
     def __init__(
@@ -170,6 +222,18 @@ class ResNet(FeatureExtractor):
         stages_n_blocks: list[int],
         block_type: Literal["basic", "bottleneck"] = "basic",
     ):
+        """
+        Args:
+            in_channels (int): Number of image channels.
+            stem_channels (int): Number of channels used in first Conv2d layer (before the residual layers).
+            stem_kernel_size (int): Kernel used in first Conv2d layer
+                (before the residual layers) as '(stem_kernel_size, stem_kernel_size)`.
+            pool_kernel_size (int): Kernel used in Pooling layer after the first Conv2d layer
+                (before the residual layers) as '(pool_kernel_size, pool_kernel_size)`.
+            stages_n_blocks (list[int]): Number of bottleneck blocks used per stage.
+            block_type (Literal["basic", "bottleneck"], optional): Whether to use Basic block or Bottleneck block.
+                Defaults to "basic".
+        """
         super().__init__()
         self.stem_channels = stem_channels
         self.block_type = block_type
@@ -178,9 +242,17 @@ class ResNet(FeatureExtractor):
         self.net = nn.Sequential(
             OrderedDict(
                 [
-                    ("stem_conv", nn.Conv2d(in_channels, stem_channels, stem_kernel_size, stride=2)),
+                    (
+                        "stem_conv",
+                        nn.Conv2d(in_channels, stem_channels, stem_kernel_size, stride=2),
+                    ),
                     ("maxpool", nn.MaxPool2d(kernel_size=pool_kernel_size, stride=2)),
-                    ("residual_layers", ResnetCoreBlocks(in_channels=stem_channels, stages_n_blocks=stages_n_blocks)),
+                    (
+                        "residual_layers",
+                        ResnetCoreBlocks(
+                            in_channels=stem_channels, stages_n_blocks=stages_n_blocks
+                        ),
+                    ),
                     ("global_pool", nn.AdaptiveAvgPool2d((1, 1))),
                     ("flatten", nn.Flatten()),
                 ]

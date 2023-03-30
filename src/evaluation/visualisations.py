@@ -37,7 +37,9 @@ def plot_probabilities(probs, target, labels, n_best=5, ax=None):
 
 
 def plot_images_probabilities_matplotlib(images, targets, probs, classes):
-    fig, axes = plt.subplots(2, len(images), figsize=(18, 7), gridspec_kw={"height_ratios": [0.5, 1]})
+    fig, axes = plt.subplots(
+        2, len(images), figsize=(18, 7), gridspec_kw={"height_ratios": [0.5, 1]}
+    )
     for ax in axes.flatten():
         ax.set_xticks([])
         ax.set_yticks([])
@@ -49,6 +51,8 @@ def plot_images_probabilities_matplotlib(images, targets, probs, classes):
 
 
 def plot_images_probabilities_plotly(images, targets, probs, labels, n_best=5):
+    if images.shape[-1] == 1:  # GREYSCALE
+        images = images.repeat(1, 1, 1, 3)
     palette = px.colors.qualitative.Plotly
     n_examples = len(images)
     fig = make_subplots(

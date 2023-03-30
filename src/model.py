@@ -8,14 +8,18 @@ import torch
 
 class ImageClassifier(LightningModule):
     def __init__(
-        self, feature_extractor: FeatureExtractor, head: ClassificationHead, classes: list[str], lr: float = 1e-3
+        self,
+        feature_extractor: FeatureExtractor,
+        head: ClassificationHead,
+        classes: list[str],
+        lr: float = 1e-3,
     ):
         super().__init__()
         self.feature_extractor = feature_extractor
         self.head = head
         self.classes = classes
         self.lr = lr
-        self.save_hyperparameters()
+        self.save_hyperparameters(ignore=["feature_extractor", "head"])
         self.train_step_outputs = []
         self.val_step_outputs = []
         self.test_step_outputs = []
