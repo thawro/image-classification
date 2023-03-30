@@ -1,3 +1,3 @@
-_target_: model.ImageClassifier
+_target_: src.architectures.model.ImageClassifier
 _partial_: True # feature_extractor and head must be set
 lr: 0.001

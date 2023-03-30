@@ -1,7 +1,7 @@
 import torch.nn.functional as F
-from evaluation.metrics import get_classification_metrics
-from architectures.feature_extractors.base import FeatureExtractor
-from architectures.head import ClassificationHead
+from src.evaluation.metrics import get_classification_metrics
+from src.architectures.feature_extractors.base import FeatureExtractor
+from src.architectures.head import ClassificationHead
 from pytorch_lightning import LightningModule
 import torch
 

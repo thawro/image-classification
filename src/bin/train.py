@@ -2,11 +2,11 @@ from torchvision import transforms as T
 import hydra
 from hydra.utils import instantiate
 from omegaconf import DictConfig
-from data.datamodule import ImageDataModule
-from architectures.head import Classifier
+from src.data.datamodule import ImageDataModule
+from src.architectures.model import ImageClassifier
 from pytorch_lightning.loggers.wandb import WandbLogger
 from pytorch_lightning.callbacks import Callback
-from utils import print_config_tree
+from src.utils import print_config_tree
 import torch
 
 
@@ -24,7 +24,7 @@ def create_datamodule(cfg: DictConfig) -> ImageDataModule:
     return datamodule
 
 
-def create_model(cfg: DictConfig, datamodule: ImageDataModule) -> Classifier:
+def create_model(cfg: DictConfig, datamodule: ImageDataModule) -> ImageClassifier:
     feature_extractor_name = cfg.feature_extractor._target_.split(".")[-1]
     sample_shape = datamodule.train[0][0].shape
     if any(
@@ -42,12 +42,12 @@ def create_model(cfg: DictConfig, datamodule: ImageDataModule) -> Classifier:
     return model
 
 
-@hydra.main(version_base=None, config_path="../configs", config_name="train")
+@hydra.main(version_base=None, config_path="../../configs", config_name="train")
 def main(cfg: DictConfig):
     print_config_tree(cfg, keys="all")
     torch.set_float32_matmul_precision("medium")
     datamodule: ImageDataModule = create_datamodule(cfg)
-    model: Classifier = create_model(cfg, datamodule)
+    model: ImageClassifier = create_model(cfg, datamodule)
     logger: WandbLogger = instantiate(cfg.logger)
     callbacks: list[Callback] = [
         instantiate(callback_cfg) for _, callback_cfg in cfg.callbacks.items()

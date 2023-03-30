@@ -1,4 +1,4 @@
-_target_: architectures.feature_extractors.resnet.ResNet
+_target_: src.architectures.feature_extractors.resnet.ResNet
 _partial_: True # in_channels must be set
 stem_channels: 32
 stem_kernel_size: 5

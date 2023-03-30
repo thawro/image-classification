@@ -1,4 +1,4 @@
-_target_: data.datamodule.MNISTDatamodule
+_target_: src.data.datamodule.MNISTDatamodule
 data_dir: ./data
 _partial_: True # transform must be set
 batch_size: 64
