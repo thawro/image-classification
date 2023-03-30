@@ -1,4 +1,7 @@
 defaults:
   - rich_progress_bar.yaml
   - early_stopping.yaml
+  - random_examples.yaml
+  - worst_examples.yaml
+  - best_examples.yaml
   - _self_

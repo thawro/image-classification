@@ -35,7 +35,10 @@ class MLP(FeatureExtractor):
         self.hidden_dims = hidden_dims
         in_dims = [in_dim] + hidden_dims[:-1]
         n_layers = len(hidden_dims)
-        layers: list[nn.Module] = [FeedForwardBlock(in_dims[i], hidden_dims[i]) for i in range(n_layers)]
+        layers: list[nn.Module] = [
+            nn.Flatten(start_dim=1, end_dim=-1),
+            *[FeedForwardBlock(in_dims[i], hidden_dims[i]) for i in range(n_layers)],
+        ]
         self.net = nn.Sequential(*layers)
 
     @property

@@ -74,7 +74,11 @@ class ImageDataModule(LightningDataModule):
 
     @property
     def n_classes(self):
-        return len(self.train.classes)
+        return len(self.classes)
+
+    @property
+    def classes(self):
+        return self.train.classes
 
     def plot_images(self, split: str, n=10, transform: Optional[Callable] = None):
         dataset = getattr(self, split)

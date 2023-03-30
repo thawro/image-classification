@@ -29,7 +29,7 @@ def create_model(cfg: DictConfig, datamodule: ImageDataModule) -> Classifier:
         in_dim = sample_shape.numel()
         feature_extractor = instantiate(cfg.feature_extractor)(in_dim=in_dim)
     head = instantiate(cfg.head)(feature_extractor.out_shape, datamodule.n_classes)
-    model = instantiate(cfg.model)(feature_extractor=feature_extractor, head=head)
+    model = instantiate(cfg.model)(feature_extractor=feature_extractor, head=head, classes=datamodule.classes)
     return model
 
 
