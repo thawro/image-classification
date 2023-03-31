@@ -4,6 +4,8 @@ from torch import nn
 from typing import Literal
 from collections import OrderedDict
 from .base import FeatureExtractor
+from src.utils.types import _size_2_t
+from torchtyping import TensorType
 
 
 class BasicBlock(nn.Module):
@@ -22,16 +24,16 @@ class BasicBlock(nn.Module):
         self,
         in_channels: int,
         out_channels: int,
-        kernel_size: int,
-        stride: int,
+        kernel_size: _size_2_t,
+        stride: _size_2_t,
         downsample: bool = False,
     ):
         """
         Args:
             in_channels (int): Number of block input channels.
             out_channels (int): Number of block output channels.
-            kernel_size (int): Kernel used for both Conv2d layers as `(kernel_size, kernel_size)`.
-            stride (int): Stride used in first Conv2d layer and in optional shortcut.
+            kernel_size (_size_2_t): Kernel used for both Conv2d layers.
+            stride (_size_2_t): Stride used in first Conv2d layer and in optional shortcut.
             downsample (bool, optional): Whether to apply downsampling. Defaults to False.
         """
         super().__init__()
@@ -49,7 +51,9 @@ class BasicBlock(nn.Module):
         self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size, padding=1)
         self.bn2 = nn.BatchNorm2d(out_channels)
 
-    def forward(self, x):
+    def forward(
+        self, x: TensorType["batch", "in_channels", "in_height", "in_width"]
+    ) -> TensorType["batch", "out_channels", "out_height", "out_width"]:
         if self.downsample:
             identity = self.shortcut(x)
         else:
@@ -78,16 +82,16 @@ class BottleneckBlock(nn.Module):
         self,
         in_channels: int,
         mid_channels: int,
-        kernel_size: int,
-        stride: int,
+        kernel_size: _size_2_t,
+        stride: _size_2_t,
         downsample: bool = False,
     ):
         """
         Args:
             in_channels (int): Number of block input channels.
             mid_channels (int): Number of block bottleneck channels.
-            kernel_size (int): Kernel used for middle Conv2d layer as `(kernel_size, kernel_size)`.
-            stride (int): Stride used in middle Conv2d layer and in optional shortcut.
+            kernel_size (_size_2_t): Kernel used for middle Conv2d layer.
+            stride (_size_2_t): Stride used in middle Conv2d layer and in optional shortcut.
             downsample (bool, optional): Whether to apply downsampling. Defaults to False.
         """
 
@@ -110,7 +114,9 @@ class BottleneckBlock(nn.Module):
         self.conv3 = nn.Conv2d(mid_channels, out_channels, kernel_size=1)
         self.bn3 = nn.BatchNorm2d(out_channels)
 
-    def forward(self, x):
+    def forward(
+        self, x: TensorType["batch", "in_channels", "in_height", "in_width"]
+    ) -> TensorType["batch", "out_channels", "out_height", "out_width"]:
         if self.downsample:
             identity = self.shortcut(x)
         else:
@@ -164,7 +170,9 @@ class BasicResNetCore(nn.Module):
             layers.append(blocks_layers)
         self.net = nn.Sequential(*layers)
 
-    def forward(self, x):
+    def forward(
+        self, x: TensorType["batch", "in_channels", "in_height", "in_width"]
+    ) -> TensorType["batch", "out_channels", "out_height", "out_width"]:
         return self.net(x)
 
 
@@ -204,7 +212,9 @@ class BottleneckResNetCore(nn.Module):
             layers.append(blocks_layers)
         self.net = nn.Sequential(*layers)
 
-    def forward(self, x):
+    def forward(
+        self, x: TensorType["batch", "in_channels", "in_height", "in_width"]
+    ) -> TensorType["batch", "out_channels", "out_height", "out_width"]:
         return self.net(x)
 
 
@@ -217,8 +227,8 @@ class ResNet(FeatureExtractor):
         self,
         in_channels: int,
         stem_channels: int,
-        stem_kernel_size: int,
-        pool_kernel_size: int,
+        stem_kernel_size: _size_2_t,
+        pool_kernel_size: _size_2_t,
         stages_n_blocks: list[int],
         block_type: Literal["basic", "bottleneck"] = "basic",
     ):
@@ -260,7 +270,7 @@ class ResNet(FeatureExtractor):
         )
 
     @property
-    def out_shape(self):
+    def out_dim(self) -> int:
         n_stages = len(self.stages_n_blocks)
         if self.block_type == "basic":
             return self.stem_channels * 2 ** (n_stages - 1)

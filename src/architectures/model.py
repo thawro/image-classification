@@ -4,6 +4,8 @@ from src.architectures.feature_extractors.base import FeatureExtractor
 from src.architectures.head import ClassificationHead
 from pytorch_lightning import LightningModule
 import torch
+from torchtyping import TensorType
+from src.utils.types import _stage
 
 
 class ImageClassifier(LightningModule):
@@ -25,11 +27,18 @@ class ImageClassifier(LightningModule):
         self.test_step_outputs = []
         self.metrics = {}
 
-    def forward(self, x):
+    def forward(
+        self, x: TensorType["batch", "channels", "height", "width"]
+    ) -> TensorType["batch", "n_classes"]:
         features = self.feature_extractor(x)
         return self.head(features)
 
-    def _common_step(self, batch, batch_idx, stage):
+    def _common_step(
+        self,
+        batch: TensorType["batch", "channels", "height", "width"],
+        batch_idx: int,
+        stage: _stage,
+    ) -> torch.Tensor:
         x, targets = batch
         out = self(x)
         log_probs = F.log_softmax(out, dim=1)
@@ -51,7 +60,7 @@ class ImageClassifier(LightningModule):
     def test_step(self, batch, batch_idx):
         return self._common_step(batch, batch_idx, stage="test")
 
-    def _common_epoch_end(self, stage: str):
+    def _common_epoch_end(self, stage: _stage):
         outputs = getattr(self, f"{stage}_step_outputs")
         preds = torch.concat([output["preds"] for output in outputs])
         targets = torch.concat([output["targets"] for output in outputs])

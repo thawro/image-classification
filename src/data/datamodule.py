@@ -2,19 +2,30 @@
 from pytorch_lightning import LightningDataModule
 
 from torchvision.datasets import MNIST, CIFAR10, CIFAR100
-from torchvision import transforms as T
-from torch.utils.data import DataLoader, random_split, Dataset
+from torch.utils.data import DataLoader, Dataset
 import torch
 import matplotlib.pyplot as plt
-from typing import Optional, Callable
 from abc import abstractmethod
 from sklearn.model_selection import train_test_split
 import numpy as np
+from torchtyping import TensorType
+from src.utils.types import _int_array, _Image_Dataset, Tensor, _stage, Optional, Callable
 
 
 class ImageDataset(Dataset):
-    def __init__(self, data, targets, classes, transform):
-        data = data if isinstance(data, torch.Tensor) else torch.from_numpy(data)
+    def __init__(
+        self,
+        data: TensorType["batch", "height", "width", "channels"] | _int_array,
+        targets: TensorType["batch"] | _int_array,
+        classes: list[str],
+        transform: Optional[
+            Callable[
+                [TensorType["height", "width", "channels"]],
+                TensorType["channels", "height", "width"],
+            ]
+        ] = None,
+    ):
+        data = data if isinstance(data, Tensor) else torch.from_numpy(data)
         if len(data.shape) == 3:  # MNSIT: no channels dimensionality
             data = data.unsqueeze(-1)
         self.data = data.float() / 255
@@ -22,7 +33,7 @@ class ImageDataset(Dataset):
         self.classes = classes
         self.transform = transform
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: int) -> tuple[TensorType["channels", "height", "width"], int]:
         data = self.data[idx]
         targets = self.targets[idx]
         if self.transform is not None:
@@ -39,8 +50,18 @@ class ImageDataModule(LightningDataModule):
     def __init__(
         self,
         data_dir: str = "./data",
-        train_transform: Optional[Callable] = None,
-        inference_transform: Optional[Callable] = None,
+        train_transform: Optional[
+            Callable[
+                [TensorType["height", "width", "channels"]],
+                TensorType["channels", "height", "width"],
+            ]
+        ] = None,
+        inference_transform: Optional[
+            Callable[
+                [TensorType["height", "width", "channels"]],
+                TensorType["channels", "height", "width"],
+            ]
+        ] = None,
         batch_size: int = 64,
         seed: int = 42,
     ):
@@ -52,35 +73,55 @@ class ImageDataModule(LightningDataModule):
         self.seed = seed
 
     @abstractmethod
-    def data_loading_fn(self, *args, **kwargs) -> Dataset:
+    def data_loading_fn(self, *args, **kwargs) -> _Image_Dataset:
         pass
 
     def download_data(self):
         self.data_loading_fn(self.data_dir, train=True, download=True)
         self.data_loading_fn(self.data_dir, train=False, download=True)
 
-    def setup(self, stage: Optional[str] = None):
+    def setup(self, stage: Optional[_stage] = None):
         if stage == "fit" or stage is None:
             dataset = self.data_loading_fn(self.data_dir, train=True, transform=None)
             data, targets = dataset.data, dataset.targets
-            train_idxs, val_idxs = train_test_split(range(len(data)), test_size=0.1, random_state=self.seed)
+            train_idxs, val_idxs = train_test_split(
+                range(len(data)), test_size=0.1, random_state=self.seed
+            )
             train_data, train_targets = data[train_idxs], np.array(targets)[train_idxs]
             val_data, val_targets = data[val_idxs], np.array(targets)[val_idxs]
-            self.train = ImageDataset(train_data, train_targets, dataset.classes, self.train_transform)
-            self.val = ImageDataset(val_data, val_targets, dataset.classes, self.inference_transform)
+            self.train = ImageDataset(
+                train_data, train_targets, dataset.classes, self.train_transform
+            )
+            self.val = ImageDataset(
+                val_data, val_targets, dataset.classes, self.inference_transform
+            )
         if stage == "test" or stage is None:
-            dataset = self.data_loading_fn(self.data_dir, train=False, transform=self.inference_transform)
-            self.test = ImageDataset(dataset.data, dataset.targets, dataset.classes, self.inference_transform)
+            dataset = self.data_loading_fn(
+                self.data_dir, train=False, transform=self.inference_transform
+            )
+            self.test = ImageDataset(
+                dataset.data, dataset.targets, dataset.classes, self.inference_transform
+            )
 
     @property
-    def n_classes(self):
+    def n_classes(self) -> int:
         return len(self.classes)
 
     @property
-    def classes(self):
+    def classes(self) -> list[str]:
         return self.train.classes
 
-    def plot_images(self, split: str, n=10, transform: Optional[Callable] = None):
+    def plot_images(
+        self,
+        split: _stage,
+        n: int = 10,
+        transform: Optional[
+            Callable[
+                [TensorType["channels", "height", "width"]],
+                TensorType["channels", "height", "width"],
+            ]
+        ] = None,
+    ):
         dataset = getattr(self, split)
         fig, axes = plt.subplots(1, n, figsize=(2.5 * n, 4))
         for (
@@ -108,19 +149,19 @@ class ImageDataModule(LightningDataModule):
 class MNISTDatamodule(ImageDataModule):
     name: str = "MNIST"
 
-    def data_loading_fn(self, *args, **kwargs) -> Dataset:
+    def data_loading_fn(self, *args, **kwargs) -> MNIST:
         return MNIST(*args, **kwargs)
 
 
 class CIFAR10Datamodule(ImageDataModule):
     name: str = "CIFAR10"
 
-    def data_loading_fn(self, *args, **kwargs) -> Dataset:
+    def data_loading_fn(self, *args, **kwargs) -> CIFAR10:
         return CIFAR10(*args, **kwargs)
 
 
 class CIFAR100Datamodule(ImageDataModule):
     name: str = "CIFAR100"
 
-    def data_loading_fn(self, *args, **kwargs) -> Dataset:
+    def data_loading_fn(self, *args, **kwargs) -> CIFAR100:
         return CIFAR100(*args, **kwargs)

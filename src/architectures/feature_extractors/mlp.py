@@ -1,6 +1,6 @@
-import torch
 from torch import nn
 from .base import FeatureExtractor
+from torchtyping import TensorType
 
 
 class FeedForwardBlock(nn.Module):
@@ -34,7 +34,7 @@ class FeedForwardBlock(nn.Module):
         if self.use_dropout:
             self.dropout = nn.Dropout(dropout)
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: TensorType["batch", "in_dim"]) -> TensorType["batch", "out_dim"]:
         out = self.linear(x)
         out = self.activation(out)
         if self.use_batch_norm:
@@ -79,5 +79,5 @@ class MLP(FeatureExtractor):
         self.net = nn.Sequential(*layers)
 
     @property
-    def out_shape(self):
+    def out_dim(self) -> int:
         return self.hidden_dims[-1]

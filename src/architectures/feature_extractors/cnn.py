@@ -1,7 +1,8 @@
-import torch
 from torch import nn
 from .base import FeatureExtractor
 from typing import Literal
+from src.utils.types import _size_2_t, _size_2_t_list
+from torchtyping import TensorType
 
 
 class CNNBlock(nn.Module):
@@ -11,10 +12,10 @@ class CNNBlock(nn.Module):
         self,
         in_channels: int,
         out_channels: int,
-        kernel_size: int,
-        stride: int = 1,
-        padding: int | str = 0,
-        pool_kernel_size: int = 1,
+        kernel_size: _size_2_t,
+        stride: _size_2_t = 1,
+        padding: str | _size_2_t = 0,
+        pool_kernel_size: _size_2_t = 1,
         pool_type: Literal["Max", "Avg"] = "Max",
         use_batch_norm: bool = True,
         dropout: float = 0,
@@ -37,7 +38,10 @@ class CNNBlock(nn.Module):
             activation (str, optional): Type of activation function used before BN. Defaults to 0.
         """
         super().__init__()
-        self.use_pool = pool_kernel_size > 1
+        if isinstance(pool_kernel_size, int):
+            self.use_pool = pool_kernel_size > 1
+        else:
+            self.use_pool = all(dim == 1 for dim in pool_kernel_size)
         self.use_batch_norm = use_batch_norm
         self.use_dropout = dropout > 0
 
@@ -52,7 +56,9 @@ class CNNBlock(nn.Module):
         if self.use_dropout:
             self.dropout = nn.Dropout2d(dropout)
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(
+        self, x: TensorType["batch", "in_channels", "in_height", "in_width"]
+    ) -> TensorType["batch", "out_channels", "out_height", "out_width"]:
         out = self.conv(x)
         out = self.activation(out)
         if self.use_pool:
@@ -73,8 +79,8 @@ class DeepCNN(FeatureExtractor):
         self,
         in_channels: int,
         out_channels: list[int],
-        kernels: list[int],
-        pool_kernels: list[int],
+        kernels: _size_2_t_list,
+        pool_kernels: _size_2_t_list,
         pool_type: Literal["Max", "Avg"] = "Max",
         use_batch_norm: bool = True,
         dropout: float = 0,
@@ -84,8 +90,10 @@ class DeepCNN(FeatureExtractor):
         Args:
             in_channels (int): Number of image channels.
             out_channels (list[int]): Number of channels used in CNN blocks.
-            kernels (list[int]): Kernels of Conv2d in CNN blocks.
-            pool_kernels (list[int]): Kernels of Pooling in CNN blocks.
+            kernels (int | list[int]): Kernels of Conv2d in CNN blocks.
+                If int or tuple[int, int] is passed, then all layers use same kernel size.
+            pool_kernels (int | list[int]): Kernels of Pooling in CNN blocks.
+                If int is passed, then all layers use same pool kernel size.
             pool_type (Literal["Max", "Avg"], optional): Pooling type in CNN blocks. Defaults to "Max".
             use_batch_norm (bool, optional): Whether to use BN in CNN blocks. Defaults to True.
             dropout (float, optional): Dropout probability used in CNN blocks. Defaults to 0.
@@ -93,12 +101,17 @@ class DeepCNN(FeatureExtractor):
         """
         super().__init__()
         self.out_channels = out_channels
+        n_blocks = len(out_channels)
         fixed_params = dict(
             pool_type=pool_type,
             use_batch_norm=use_batch_norm,
             dropout=dropout,
             activation=activation,
         )
+        if isinstance(kernels, int) or isinstance(kernels, tuple):
+            kernels = [kernels] * n_blocks
+        if isinstance(pool_kernels, int) or isinstance(pool_kernels, tuple):
+            pool_kernels = [pool_kernels] * n_blocks
         layers = [
             CNNBlock(
                 in_channels if i == 0 else out_channels[i - 1],
@@ -107,10 +120,10 @@ class DeepCNN(FeatureExtractor):
                 pool_kernel_size=pool_kernels[i],
                 **fixed_params,
             )
-            for i in range(len(out_channels))
+            for i in range(n_blocks)
         ] + [nn.AdaptiveAvgPool2d((1, 1)), nn.Flatten()]
         self.net = nn.Sequential(*layers)
 
     @property
-    def out_shape(self):
+    def out_dim(self) -> int:
         return self.out_channels[-1]

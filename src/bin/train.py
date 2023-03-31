@@ -6,7 +6,7 @@ from src.data.datamodule import ImageDataModule
 from src.architectures.model import ImageClassifier
 from pytorch_lightning.loggers.wandb import WandbLogger
 from pytorch_lightning.callbacks import Callback
-from src.utils import print_config_tree
+from src.utils.utils import print_config_tree
 import torch
 
 
@@ -35,7 +35,7 @@ def create_model(cfg: DictConfig, datamodule: ImageDataModule) -> ImageClassifie
     else:  # MLP
         in_dim = sample_shape.numel()
         feature_extractor = instantiate(cfg.feature_extractor)(in_dim=in_dim)
-    head = instantiate(cfg.head)(feature_extractor.out_shape, datamodule.n_classes)
+    head = instantiate(cfg.head)(feature_extractor.out_dim, datamodule.n_classes)
     model = instantiate(cfg.model)(
         feature_extractor=feature_extractor, head=head, classes=datamodule.classes
     )
