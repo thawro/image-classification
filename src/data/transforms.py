@@ -41,8 +41,3 @@ class ImgUnNormalize(UnNormalize):
         if n_channels == 1:
             super().__init__(mean=MEAN_MNIST, std=STD_MNIST)
         super().__init__(mean=MEAN_IMAGENET, std=STD_IMAGENET)
-
-
-class BasicImageTransform(T.Compose):
-    def __init__(self):
-        super().__init__(transforms=[T.ToTensor(), Permute(dims=(2, 0, 1))])

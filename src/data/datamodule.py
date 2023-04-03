@@ -10,7 +10,6 @@ from sklearn.model_selection import train_test_split
 import numpy as np
 from torchtyping import TensorType
 from src.utils.types import _int_array, _Image_Dataset, _stage, Optional, Callable
-from src.data.transforms import BasicImageTransform
 import torchvision.transforms as T
 
 
@@ -27,7 +26,7 @@ class ImageDataset(Dataset):
                 [Image.Image],
                 TensorType["channels", "height", "width"],
             ]
-        ] = BasicImageTransform(),
+        ] = None,
     ):
         if isinstance(data, torch.Tensor):
             data = data.numpy().squeeze()
