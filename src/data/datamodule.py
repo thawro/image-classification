@@ -1,6 +1,6 @@
 # from lightning.pytorch import LightningDataModule
 from pytorch_lightning import LightningDataModule
-
+from PIL import Image
 from torchvision.datasets import MNIST, CIFAR10, CIFAR100
 from torch.utils.data import DataLoader, Dataset
 import torch
@@ -9,36 +9,45 @@ from abc import abstractmethod
 from sklearn.model_selection import train_test_split
 import numpy as np
 from torchtyping import TensorType
-from src.utils.types import _int_array, _Image_Dataset, Tensor, _stage, Optional, Callable
+from src.utils.types import _int_array, _Image_Dataset, _stage, Optional, Callable
+from src.data.transforms import BasicImageTransform
+import torchvision.transforms as T
 
 
 class ImageDataset(Dataset):
     def __init__(
         self,
-        data: TensorType["batch", "height", "width", "channels"] | _int_array,
+        data: TensorType["batch", "height", "width", "channels"]
+        | TensorType["batch", "height", "width"]
+        | _int_array,
         targets: TensorType["batch"] | _int_array,
         classes: list[str],
         transform: Optional[
             Callable[
-                [TensorType["height", "width", "channels"]],
+                [Image.Image],
                 TensorType["channels", "height", "width"],
             ]
-        ] = None,
+        ] = BasicImageTransform(),
     ):
-        data = data if isinstance(data, Tensor) else torch.from_numpy(data)
-        if len(data.shape) == 3:  # MNSIT: no channels dimensionality
-            data = data.unsqueeze(-1)
-        self.data = data.float() / 255
+        if isinstance(data, torch.Tensor):
+            data = data.numpy().squeeze()
+        if isinstance(targets, np.ndarray):
+            targets = torch.from_numpy(targets)
+
+        data = data.astype(np.uint8)
+        targets = targets.to(torch.int16)
+        self.data = data
         self.targets = targets
         self.classes = classes
-        self.transform = transform
+        self.transform = transform if transform is not None else T.PILToTensor()
 
-    def __getitem__(self, idx: int) -> tuple[TensorType["channels", "height", "width"], int]:
-        data = self.data[idx]
-        targets = self.targets[idx]
-        if self.transform is not None:
-            data = self.transform(data)
-        return data, targets
+    def __getitem__(
+        self, idx: int
+    ) -> tuple[TensorType["channels", "height", "width"], torch.Tensor]:
+        img, target = self.data[idx], self.targets[idx]
+        img = Image.fromarray(img)
+        img = self.transform(img)
+        return img, target
 
     def __len__(self):
         return len(self.data)
@@ -52,13 +61,13 @@ class ImageDataModule(LightningDataModule):
         data_dir: str = "./data",
         train_transform: Optional[
             Callable[
-                [TensorType["height", "width", "channels"]],
+                [Image.Image],
                 TensorType["channels", "height", "width"],
             ]
         ] = None,
         inference_transform: Optional[
             Callable[
-                [TensorType["height", "width", "channels"]],
+                [Image.Image],
                 TensorType["channels", "height", "width"],
             ]
         ] = None,

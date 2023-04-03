@@ -10,11 +10,14 @@ STD_IMAGENET = [0.229, 0.224, 0.225]
 
 
 class Permute:
-    def __init__(self, dims: list[int]):
+    def __init__(self, dims: tuple[int, ...] | list[int]):
         self.dims = list(dims)
 
     def __call__(self, sample: Tensor) -> Tensor:
         return torch.permute(sample, self.dims)
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(dims={self.dims})"
 
 
 class UnNormalize(T.Normalize):
@@ -38,3 +41,8 @@ class ImgUnNormalize(UnNormalize):
         if n_channels == 1:
             super().__init__(mean=MEAN_MNIST, std=STD_MNIST)
         super().__init__(mean=MEAN_IMAGENET, std=STD_IMAGENET)
+
+
+class BasicImageTransform(T.Compose):
+    def __init__(self):
+        super().__init__(transforms=[T.ToTensor(), Permute(dims=(2, 0, 1))])

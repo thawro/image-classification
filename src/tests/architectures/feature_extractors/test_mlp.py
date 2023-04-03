@@ -18,14 +18,14 @@ DATA = RAW_BATCH_DATA + TRANSFORMED_BATCH_DATA
     ),
 )
 def test_out_dim(
-    batch_X: torch.Tensor,
+    batch_X: str,
     hidden_dims: list[int],
     use_batch_norm: bool,
     dropout: float,
     activation: str,
-    request,
+    request: pytest.FixtureRequest,
 ):
-    batch_X = request.getfixturevalue(batch_X)
+    batch_X: torch.Tensor = request.getfixturevalue(batch_X)
     in_dim = batch_X[0].numel()
     model = MLP(
         in_dim=in_dim,
