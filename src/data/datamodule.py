@@ -54,8 +54,6 @@ class ImageDataset(Dataset):
 
 
 class ImageDataModule(LightningDataModule):
-    name: str = ""
-
     def __init__(
         self,
         data_dir: str = "./data",
@@ -120,6 +118,10 @@ class ImageDataModule(LightningDataModule):
     def classes(self) -> list[str]:
         return self.train.classes
 
+    @property
+    def name(self) -> str:
+        return self.__class__.__name__.replace("DataModule", "")
+
     def plot_images(
         self,
         split: _stage,
@@ -155,22 +157,16 @@ class ImageDataModule(LightningDataModule):
         return DataLoader(self.test, batch_size=self.batch_size, num_workers=16)
 
 
-class MNISTDatamodule(ImageDataModule):
-    name: str = "MNIST"
-
+class MNISTDataModule(ImageDataModule):
     def data_loading_fn(self, *args, **kwargs) -> MNIST:
         return MNIST(*args, **kwargs)
 
 
-class CIFAR10Datamodule(ImageDataModule):
-    name: str = "CIFAR10"
-
+class CIFAR10DataModule(ImageDataModule):
     def data_loading_fn(self, *args, **kwargs) -> CIFAR10:
         return CIFAR10(*args, **kwargs)
 
 
-class CIFAR100Datamodule(ImageDataModule):
-    name: str = "CIFAR100"
-
+class CIFAR100DataModule(ImageDataModule):
     def data_loading_fn(self, *args, **kwargs) -> CIFAR100:
         return CIFAR100(*args, **kwargs)
