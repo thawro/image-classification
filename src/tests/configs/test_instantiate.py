@@ -151,7 +151,7 @@ def test_logger(
             config_name=CONFIG_NAME,
             output_path=tmp_path,
         )
-        cfg.logger.name = "_test_logger"
+        cfg.run_name = "_test_logger_initialize"
         logger = hydra.utils.instantiate(cfg.logger)
         assert isinstance(logger, expected)
 
