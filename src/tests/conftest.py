@@ -1,17 +1,30 @@
+import numpy as np
 import pytest
 import torch
-from src.data.datamodule import ImageDataset
-from torchvision.transforms import ToTensor, Normalize, RandomRotation, Compose
-from src.data.transforms import MEAN_IMAGENET, STD_IMAGENET, MEAN_MNIST, STD_MNIST
-import numpy as np
+from torchvision.transforms import Compose, Normalize, RandomRotation, ToTensor
+
+from src.data.datamodule import (
+    CIFAR10DataModule,
+    CIFAR100DataModule,
+    ImageDataset,
+    MNISTDataModule,
+)
+from src.data.transforms import MEAN_IMAGENET, MEAN_MNIST, STD_IMAGENET, STD_MNIST
+from src.utils.utils import ROOT
 
 
 def get_transforms(mean, std):
     return [
-        Compose([ToTensor()]),
-        Compose([ToTensor(), RandomRotation(15)]),
-        Compose([ToTensor(), Normalize(mean, std)]),
-        Compose([ToTensor(), RandomRotation(15), Normalize(mean, std)]),
+        {"train": Compose([ToTensor()]), "inference": Compose([ToTensor()])},
+        {"train": Compose([ToTensor(), RandomRotation(15)]), "inference": Compose([ToTensor()])},
+        {
+            "train": Compose([ToTensor(), Normalize(mean, std)]),
+            "inference": Compose([ToTensor(), Normalize(mean, std)]),
+        },
+        {
+            "train": Compose([ToTensor(), RandomRotation(15), Normalize(mean, std)]),
+            "inference": Compose([ToTensor(), Normalize(mean, std)]),
+        },
     ]
 
 
@@ -60,13 +73,25 @@ def transformed_cifar100_batch() -> torch.Tensor:
 
 
 @pytest.fixture(params=IMAGENET_TRANSFORMS)
-def cifar_dataset(request: pytest.FixtureRequest):
+def cifar_dataset(request: pytest.FixtureRequest) -> ImageDataset:
     _size = (BATCH_SIZE, 32, 32, 3)
     classes = [str(i) for i in range(10)]
     data = np.random.randint(0, 256, _size)
     targets = np.random.randint(0, len(classes), (BATCH_SIZE,))
-    transform = request.param
-    return ImageDataset(data, targets, classes, transform)
+    transforms = request.param
+    return ImageDataset(data, targets, classes, transforms["train"])
+
+
+@pytest.fixture(params=IMAGENET_TRANSFORMS)
+def cifar_datamodule(request: pytest.FixtureRequest) -> CIFAR10DataModule:
+    transforms = request.param
+    datamodule = CIFAR10DataModule(
+        data_dir=str(ROOT / "data"),
+        train_transform=transforms["train"],
+        inference_transform=transforms["inference"],
+        batch_size=BATCH_SIZE,
+    )
+    return datamodule
 
 
 @pytest.fixture(params=MNIST_TRANSFORMS)
@@ -75,8 +100,20 @@ def mnist_dataset(request: pytest.FixtureRequest):
     classes = [str(i) for i in range(10)]
     data = torch.randint(0, 256, _size)
     targets = torch.randint(0, len(classes), (BATCH_SIZE,))
-    transform = request.param
-    return ImageDataset(data, targets, classes, transform)
+    transforms = request.param
+    return ImageDataset(data, targets, classes, transforms["train"])
+
+
+@pytest.fixture(params=MNIST_TRANSFORMS)
+def mnist_datamodule(request: pytest.FixtureRequest) -> MNISTDataModule:
+    transforms = request.param
+    datamodule = MNISTDataModule(
+        data_dir=str(ROOT / "data"),
+        train_transform=transforms["train"],
+        inference_transform=transforms["inference"],
+        batch_size=BATCH_SIZE,
+    )
+    return datamodule
 
 
 @pytest.fixture

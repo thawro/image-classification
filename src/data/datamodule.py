@@ -1,24 +1,24 @@
 # from lightning.pytorch import LightningDataModule
-from pytorch_lightning import LightningDataModule
-from PIL import Image
-from torchvision.datasets import MNIST, CIFAR10, CIFAR100
-from torch.utils.data import DataLoader, Dataset
-import torch
-import matplotlib.pyplot as plt
 from abc import abstractmethod
-from sklearn.model_selection import train_test_split
+
+import matplotlib.pyplot as plt
 import numpy as np
-from torchtyping import TensorType
-from src.utils.types import _int_array, _Image_Dataset, _stage, Optional, Callable
+import torch
 import torchvision.transforms as T
+from PIL import Image
+from pytorch_lightning import LightningDataModule
+from sklearn.model_selection import train_test_split
+from torch.utils.data import DataLoader, Dataset
+from torchtyping import TensorType
+from torchvision.datasets import CIFAR10, CIFAR100, MNIST
+
+from src.utils.types import Callable, Optional, _Image_Dataset, _int_array, _stage
 
 
 class ImageDataset(Dataset):
     def __init__(
         self,
-        data: TensorType["batch", "height", "width", "channels"]
-        | TensorType["batch", "height", "width"]
-        | _int_array,
+        data: TensorType["batch", "height", "width", "channels"] | TensorType["batch", "height", "width"] | _int_array,
         targets: TensorType["batch"] | _int_array,
         classes: list[str],
         transform: Optional[
@@ -32,6 +32,8 @@ class ImageDataset(Dataset):
             data = data.numpy().squeeze()
         if isinstance(targets, np.ndarray):
             targets = torch.from_numpy(targets)
+        elif isinstance(targets, list):
+            targets = torch.Tensor(targets)
 
         data = data.astype(np.uint8)
         targets = targets.to(torch.int16)
@@ -40,9 +42,7 @@ class ImageDataset(Dataset):
         self.classes = classes
         self.transform = transform if transform is not None else T.PILToTensor()
 
-    def __getitem__(
-        self, idx: int
-    ) -> tuple[TensorType["channels", "height", "width"], torch.Tensor]:
+    def __getitem__(self, idx: int) -> tuple[TensorType["channels", "height", "width"], torch.Tensor]:
         img, target = self.data[idx], self.targets[idx]
         img = Image.fromarray(img)
         img = self.transform(img)
@@ -85,6 +85,7 @@ class ImageDataModule(LightningDataModule):
         self.data_dir = data_dir
         self.batch_size = batch_size
         self.seed = seed
+        self.train, self.val, self.test = None, None, None
 
     @abstractmethod
     def data_loading_fn(self, *args, **kwargs) -> _Image_Dataset:
@@ -98,24 +99,14 @@ class ImageDataModule(LightningDataModule):
         if stage == "fit" or stage is None:
             dataset = self.data_loading_fn(self.data_dir, train=True, transform=None)
             data, targets = dataset.data, dataset.targets
-            train_idxs, val_idxs = train_test_split(
-                range(len(data)), test_size=0.1, random_state=self.seed
-            )
+            train_idxs, val_idxs = train_test_split(range(len(data)), test_size=0.1, random_state=self.seed)
             train_data, train_targets = data[train_idxs], np.array(targets)[train_idxs]
             val_data, val_targets = data[val_idxs], np.array(targets)[val_idxs]
-            self.train = ImageDataset(
-                train_data, train_targets, dataset.classes, self.train_transform
-            )
-            self.val = ImageDataset(
-                val_data, val_targets, dataset.classes, self.inference_transform
-            )
+            self.train = ImageDataset(train_data, train_targets, dataset.classes, self.train_transform)
+            self.val = ImageDataset(val_data, val_targets, dataset.classes, self.inference_transform)
         if stage == "test" or stage is None:
-            dataset = self.data_loading_fn(
-                self.data_dir, train=False, transform=self.inference_transform
-            )
-            self.test = ImageDataset(
-                dataset.data, dataset.targets, dataset.classes, self.inference_transform
-            )
+            dataset = self.data_loading_fn(self.data_dir, train=False, transform=self.inference_transform)
+            self.test = ImageDataset(dataset.data, dataset.targets, dataset.classes, self.inference_transform)
 
     @property
     def n_classes(self) -> int:
