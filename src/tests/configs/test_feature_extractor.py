@@ -1,13 +1,10 @@
-import pytest
-from src.tests.utils import (
-    create_hydra_config,
-    CONFIGS_PATH,
-    CONFIG_NAME,
-)
 import hydra
-from src.architectures.feature_extractors import mlp, cnn, resnet, base
-from src.utils.hydra import instantiate_feature_extractor
+import pytest
+
+from src.architectures.feature_extractors import base, cnn, mlp, resnet
 from src.data.datamodule import ImageDataset
+from src.tests.utils import CONFIG_NAME, CONFIGS_PATH, create_hydra_config
+from src.utils.hydra import instantiate_feature_extractor
 
 
 @pytest.mark.parametrize(
@@ -27,8 +24,7 @@ def test_feature_extraction_instantiation(
     with hydra.initialize(version_base=None, config_path=str(CONFIGS_PATH)):
         cfg = create_hydra_config(
             experiment_name=None,
-            overrided_default="feature_extractor",
-            overrided_config=[cfg_path],
+            overrided_cfgs={"feature_extractor": [cfg_path]},
             config_name=CONFIG_NAME,
             output_path=tmp_path,
         )

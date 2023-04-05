@@ -36,7 +36,7 @@ class ImageDataset(Dataset):
             targets = torch.Tensor(targets)
 
         data = data.astype(np.uint8)
-        targets = targets.to(torch.int16)
+        targets = targets.to(torch.int64)
         self.data = data
         self.targets = targets
         self.classes = classes

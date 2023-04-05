@@ -14,6 +14,7 @@ defaults:
   - paths: default.yaml
   - trainer: default.yaml
   - experiment: null
+  - debug: null
 
 project_name: image_classification
 run_name: test

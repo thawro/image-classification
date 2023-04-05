@@ -1,11 +1,8 @@
-import pytest
-from src.tests.utils import (
-    create_hydra_config,
-    CONFIGS_PATH,
-    CONFIG_NAME,
-)
 import hydra
+import pytest
 from pytorch_lightning import Trainer
+
+from src.tests.utils import CONFIG_NAME, CONFIGS_PATH, create_hydra_config
 
 
 @pytest.mark.parametrize(
@@ -22,8 +19,7 @@ def test_callbacks_instantiation(
     with hydra.initialize(version_base=None, config_path=str(CONFIGS_PATH)):
         cfg = create_hydra_config(
             experiment_name=None,
-            overrided_default="trainer",
-            overrided_config=[cfg_path],
+            overrided_cfgs={"trainer": [cfg_path]},
             config_name=CONFIG_NAME,
             output_path=tmp_path,
         )

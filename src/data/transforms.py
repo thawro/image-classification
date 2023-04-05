@@ -1,6 +1,7 @@
 import torch
 import torchvision.transforms as T
-from src.utils.types import Tensor, Sequence
+
+from src.utils.types import Sequence, Tensor
 
 MEAN_MNIST = [0.1307]
 STD_MNIST = [0.3081]
@@ -31,13 +32,17 @@ class ImgNormalize(T.Normalize):
     def __init__(self, n_channels: int):
         assert n_channels in [1, 3]
         if n_channels == 1:
-            super().__init__(mean=MEAN_MNIST, std=STD_MNIST)
-        super().__init__(mean=MEAN_IMAGENET, std=STD_IMAGENET)
+            mean, std = MEAN_MNIST, STD_MNIST
+        else:
+            mean, std = MEAN_IMAGENET, STD_IMAGENET
+        super().__init__(mean=mean, std=std)
 
 
 class ImgUnNormalize(UnNormalize):
     def __init__(self, n_channels: int):
         assert n_channels in [1, 3]
         if n_channels == 1:
-            super().__init__(mean=MEAN_MNIST, std=STD_MNIST)
-        super().__init__(mean=MEAN_IMAGENET, std=STD_IMAGENET)
+            mean, std = MEAN_MNIST, STD_MNIST
+        else:
+            mean, std = MEAN_IMAGENET, STD_IMAGENET
+        super().__init__(mean=mean, std=std)

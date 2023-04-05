@@ -4,7 +4,7 @@ from src.data.datamodule import CIFAR10DataModule, ImageDataModule, MNISTDataMod
 from src.tests.conftest import BATCH_SIZE
 
 
-def _test_datamodule(datamodule: ImageDataModule, num_all_samples: int) -> ImageDataModule:
+def _test_datamodule(datamodule: ImageDataModule, num_all_samples: int):
     assert not datamodule.train
     assert not datamodule.val
     assert not datamodule.test
@@ -28,7 +28,7 @@ def _test_datamodule(datamodule: ImageDataModule, num_all_samples: int) -> Image
     assert len(x) == BATCH_SIZE
     assert len(y) == BATCH_SIZE
     assert x.dtype == torch.float32
-    assert y.dtype == torch.int16
+    assert y.dtype == torch.int64
 
 
 def test_cifar_datamodule(cifar_datamodule: CIFAR10DataModule):

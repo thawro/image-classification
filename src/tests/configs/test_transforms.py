@@ -1,13 +1,10 @@
-import pytest
-from src.tests.utils import (
-    create_hydra_config,
-    CONFIGS_PATH,
-    CONFIG_NAME,
-)
 import hydra
-from torchvision.transforms import RandomRotation, RandomHorizontalFlip, ToTensor
+import pytest
 from torch.nn import Flatten, Identity
-from src.data.transforms import Permute, ImgNormalize
+from torchvision.transforms import RandomHorizontalFlip, RandomRotation, ToTensor
+
+from src.data.transforms import ImgNormalize, Permute
+from src.tests.utils import CONFIG_NAME, CONFIGS_PATH, create_hydra_config
 from src.utils.types import Callable
 
 
@@ -32,8 +29,7 @@ def test_transforms_instantiation(
     with hydra.initialize(version_base=None, config_path=str(CONFIGS_PATH)):
         cfg = create_hydra_config(
             experiment_name=None,
-            overrided_default="transforms",
-            overrided_config=[cfg_path],
+            overrided_cfgs={"transforms": [cfg_path]},
             config_name=CONFIG_NAME,
             output_path=tmp_path,
         )

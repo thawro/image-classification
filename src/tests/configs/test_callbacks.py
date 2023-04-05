@@ -1,12 +1,9 @@
-import pytest
-from src.tests.utils import (
-    create_hydra_config,
-    CONFIGS_PATH,
-    CONFIG_NAME,
-)
 import hydra
+import pytest
+from pytorch_lightning.callbacks import Callback, EarlyStopping, RichProgressBar
+
 from src.evaluation.callbacks import ExamplePredictionsLogger
-from pytorch_lightning.callbacks import RichProgressBar, Callback, EarlyStopping
+from src.tests.utils import CONFIG_NAME, CONFIGS_PATH, create_hydra_config
 
 
 @pytest.mark.parametrize(
@@ -37,8 +34,7 @@ def test_callbacks_initialize(
     with hydra.initialize(version_base=None, config_path=str(CONFIGS_PATH)):
         cfg = create_hydra_config(
             experiment_name=None,
-            overrided_default="callbacks",
-            overrided_config=[cfg_path],
+            overrided_cfgs={"callbacks": [cfg_path]},
             config_name=CONFIG_NAME,
             output_path=tmp_path,
         )

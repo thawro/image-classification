@@ -1,12 +1,9 @@
-import pytest
-from src.tests.utils import (
-    create_hydra_config,
-    CONFIGS_PATH,
-    CONFIG_NAME,
-)
 import hydra
-from pytorch_lightning.loggers.wandb import WandbLogger
+import pytest
 from pytorch_lightning.loggers import Logger
+from pytorch_lightning.loggers.wandb import WandbLogger
+
+from src.tests.utils import CONFIG_NAME, CONFIGS_PATH, create_hydra_config
 
 
 @pytest.mark.parametrize(
@@ -23,11 +20,10 @@ def test_logger_instantiation(
     with hydra.initialize(version_base=None, config_path=str(CONFIGS_PATH)):
         cfg = create_hydra_config(
             experiment_name=None,
-            overrided_default="logger",
-            overrided_config=[cfg_path],
+            overrided_cfgs={"logger": [cfg_path]},
             config_name=CONFIG_NAME,
             output_path=tmp_path,
         )
-        cfg.logger.name = "_test"
+        cfg.logger.name = "_test_logger"
         logger = hydra.utils.instantiate(cfg.logger)
         assert isinstance(logger, expected)

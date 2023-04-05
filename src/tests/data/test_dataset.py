@@ -1,4 +1,5 @@
 import torch
+
 from src.data.datamodule import ImageDataset
 from src.tests.conftest import BATCH_SIZE
 
@@ -17,7 +18,7 @@ def _test_dataset_getitem(dataset: ImageDataset):
     assert torch.is_floating_point(data)
     assert len(data.shape) == 3
     assert torch.is_tensor(target)
-    assert target.dtype == torch.int16
+    assert target.dtype == torch.int64
     assert target <= len(dataset.classes)
     return data, target
 

@@ -1,24 +1,36 @@
-from torchvision.transforms import Compose
-from omegaconf import DictConfig
-from src.data.datamodule import ImageDataModule
-from hydra.utils import instantiate
-from src.architectures.model import ImageClassifier
-from src.architectures.feature_extractors.base import FeatureExtractor
 import torch
+from hydra.utils import instantiate
+from omegaconf import DictConfig
+from pytorch_lightning import Callback, Trainer
+from pytorch_lightning.loggers import Logger
+from torchvision.transforms import Compose
+
+from src.architectures.feature_extractors.base import FeatureExtractor
+from src.architectures.head import ClassificationHead
+from src.architectures.model import ImageClassifier
+from src.data.datamodule import ImageDataModule
+from src.utils.utils import log
 
 
 def instantiate_transforms(cfg: DictConfig) -> tuple[Compose, Compose]:
+    log.info("Instantiating Transforms..")
     transforms = cfg.transforms.items()
     train_transform = Compose([instantiate(transform["train"]) for _, transform in transforms])
-    inference_transform = Compose(
-        [instantiate(transform["inference"]) for _, transform in transforms]
-    )
+    inference_transform = Compose([instantiate(transform["inference"]) for _, transform in transforms])
     return train_transform, inference_transform
 
 
-def instantiate_feature_extractor(
-    cfg: DictConfig, dummy_input_shape: torch.Size
-) -> FeatureExtractor:
+def instantiate_datamodule(cfg: DictConfig) -> ImageDataModule:
+    log.info("Instantiating DataModule..")
+    train_transform, inference_transform = instantiate_transforms(cfg)
+    datamodule = instantiate(cfg.datamodule, train_transform=train_transform, inference_transform=inference_transform)
+    datamodule.download_data()
+    datamodule.setup(stage="fit")
+    return datamodule
+
+
+def instantiate_feature_extractor(cfg: DictConfig, dummy_input_shape: torch.Size) -> FeatureExtractor:
+    log.info("Instantiating Feature Extractor..")
     class_name = cfg.feature_extractor._target_.split(".")[-1]
     if any([name in class_name.lower() for name in ["resnet", "cnn"]]):  # ResNet, DeepCNN
         in_channels = dummy_input_shape[0]
@@ -29,20 +41,28 @@ def instantiate_feature_extractor(
     return feature_extractor
 
 
-def instantiate_datamodule(cfg: DictConfig) -> ImageDataModule:
-    train_transform, inference_transform = instantiate_transforms(cfg)
-    datamodule = instantiate(
-        cfg.datamodule, train_transform=train_transform, inference_transform=inference_transform
-    )
-    datamodule.download_data()
-    datamodule.setup(stage="fit")
-    return datamodule
+def instantiate_head(cfg: DictConfig, in_dim: int, n_classes: int) -> ClassificationHead:
+    log.info("Instantiating ClassificationHead..")
+    return instantiate(cfg.head, in_dim=in_dim, n_classes=n_classes)
 
 
 def instantiate_model(cfg: DictConfig, datamodule: ImageDataModule) -> ImageClassifier:
+    log.info("Instantiating Model..")
     feature_extractor = instantiate_feature_extractor(cfg, datamodule.train.dummy_input_shape)
-    head = instantiate(cfg.head)(in_dim=feature_extractor.out_dim, n_classes=datamodule.n_classes)
-    model = instantiate(cfg.model)(
-        feature_extractor=feature_extractor, head=head, classes=datamodule.classes
-    )
-    return model
+    head = instantiate_head(cfg, in_dim=feature_extractor.out_dim, n_classes=datamodule.n_classes)
+    return instantiate(cfg.model)(feature_extractor=feature_extractor, head=head, classes=datamodule.classes)
+
+
+def instantiate_logger(cfg: DictConfig) -> Logger:
+    log.info("Instantiating Logger..")
+    return instantiate(cfg.logger)
+
+
+def instantiate_callbacks(cfg: DictConfig) -> list[Callback]:
+    log.info("Instantiating Callbacks..")
+    return [instantiate(cbk_cfg) for _, cbk_cfg in cfg.callbacks.items()]
+
+
+def instantiate_trainer(cfg: DictConfig, logger: Logger, callbacks: list[Callback], **kwargs) -> Trainer:
+    log.info("Instantiating Trainer..")
+    return instantiate(cfg.trainer, logger=logger, callbacks=callbacks, **kwargs)
