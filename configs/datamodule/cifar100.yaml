@@ -1,5 +1,6 @@
 _target_: src.data.datamodule.CIFAR100DataModule
 data_dir: ./data
-_partial_: True # transform must be set
+train_transform: null
+inference_transform: null
 batch_size: 64
 seed: ${seed}

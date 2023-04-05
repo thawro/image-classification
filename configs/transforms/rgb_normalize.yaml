@@ -1,4 +1,4 @@
-normalize:
+rgb_normalize:
   train:
     _target_: src.data.transforms.ImgNormalize
     n_channels: 3

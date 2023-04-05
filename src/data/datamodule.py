@@ -51,6 +51,14 @@ class ImageDataset(Dataset):
     def __len__(self):
         return len(self.data)
 
+    @property
+    def dummy_input(self):
+        return self[0][0]
+
+    @property
+    def dummy_input_shape(self):
+        return self.dummy_input.shape
+
 
 class ImageDataModule(LightningDataModule):
     def __init__(

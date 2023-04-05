@@ -2,7 +2,7 @@ import pytest
 import torch
 from src.data.datamodule import ImageDataset
 from torchvision.transforms import ToTensor, Normalize, RandomRotation, Compose
-from src.data.transforms import Permute, MEAN_IMAGENET, STD_IMAGENET, MEAN_MNIST, STD_MNIST
+from src.data.transforms import MEAN_IMAGENET, STD_IMAGENET, MEAN_MNIST, STD_MNIST
 import numpy as np
 
 
@@ -77,3 +77,8 @@ def mnist_dataset(request: pytest.FixtureRequest):
     targets = torch.randint(0, len(classes), (BATCH_SIZE,))
     transform = request.param
     return ImageDataset(data, targets, classes, transform)
+
+
+@pytest.fixture
+def example_experiment_name():
+    return "test"

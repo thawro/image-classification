@@ -1,4 +1,4 @@
-permute_channels:
+permute:
   train:
     _target_: src.data.transforms.Permute
     dims: [2, 0, 1]

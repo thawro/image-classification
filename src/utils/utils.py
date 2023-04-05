@@ -2,8 +2,10 @@ from omegaconf import DictConfig, OmegaConf
 import rich
 import rich.syntax
 import rich.tree
+from pathlib import Path
 
 STYLE = "dim"
+ROOT = Path(__file__).parent.parent.parent
 
 
 def print_config_tree(cfg: DictConfig, keys: list[str] | str = "all", style: str = "dim"):

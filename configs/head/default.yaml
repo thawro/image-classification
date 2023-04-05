@@ -1,2 +1,3 @@
 _target_: src.architectures.head.ClassificationHead
-_partial_: True # in_dim and out_dim must be set
+in_dim: 128
+n_classes: 10
