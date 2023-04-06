@@ -17,13 +17,15 @@ from src.architectures.feature_extractors import base, cnn, mlp, resnet
 from src.architectures.head import ClassificationHead
 from src.architectures.model import ImageClassifier
 from src.data.datamodule import (
+    CelebADataModule,
     CIFAR10DataModule,
     CIFAR100DataModule,
+    EMNISTDataModule,
     FashionMNISTDataModule,
     ImageDataModule,
-    ImageDataset,
     MNISTDataModule,
 )
+from src.data.dataset import StaticImageDataset
 from src.data.transforms import ImgNormalize, Permute
 from src.evaluation.callbacks import ExamplePredictionsLogger
 from src.tests.utils import CONFIG_NAME, CONFIGS_PATH, create_hydra_config
@@ -77,6 +79,8 @@ def test_callbacks(
         ["cifar100.yaml", CIFAR100DataModule],
         ["mnist.yaml", MNISTDataModule],
         ["fashion_mnist.yaml", FashionMNISTDataModule],
+        ["emnist.yaml", EMNISTDataModule],
+        ["celeb_a.yaml", CelebADataModule],
     ],
 )
 def test_datamodule(
@@ -106,7 +110,7 @@ def test_datamodule(
 def test_feature_extractor(
     cfg_path: str,
     expected: base.FeatureExtractor,
-    mnist_dataset: ImageDataset,
+    mnist_dataset: StaticImageDataset,
     tmp_path,
 ) -> None:
     with hydra.initialize(version_base=None, config_path=str(CONFIGS_PATH)):

@@ -1,15 +1,17 @@
 import torch
 
 from src.data.datamodule import (
+    CelebADataModule,
     CIFAR10DataModule,
+    EMNISTDataModule,
     FashionMNISTDataModule,
-    ImageDataModule,
     MNISTDataModule,
+    StaticImageDataModule,
 )
 from src.tests.conftest import BATCH_SIZE
 
 
-def _test_datamodule(datamodule: ImageDataModule, num_all_samples: int):
+def _test_static_datamodule(datamodule: StaticImageDataModule, num_all_samples: int):
     assert not datamodule.train
     assert not datamodule.val
     assert not datamodule.test
@@ -36,13 +38,17 @@ def _test_datamodule(datamodule: ImageDataModule, num_all_samples: int):
     assert y.dtype == torch.int64
 
 
-def test_cifar_datamodule(cifar_datamodule: CIFAR10DataModule):
-    _test_datamodule(cifar_datamodule, 60_000)
+def test_cifar(cifar_datamodule: CIFAR10DataModule):
+    _test_static_datamodule(cifar_datamodule, 60_000)
 
 
-def test_mnist_datamodule(mnist_datamodule: MNISTDataModule):
-    _test_datamodule(mnist_datamodule, 70_000)
+def test_mnist(mnist_datamodule: MNISTDataModule):
+    _test_static_datamodule(mnist_datamodule, 70_000)
 
 
-def test_fashion_mnist_datamodule(fashion_mnist_datamodule: FashionMNISTDataModule):
-    _test_datamodule(fashion_mnist_datamodule, 70_000)
+def test_fashion_mnist(fashion_mnist_datamodule: FashionMNISTDataModule):
+    _test_static_datamodule(fashion_mnist_datamodule, 70_000)
+
+
+def test_emnist(emnist_datamodule: EMNISTDataModule):
+    _test_static_datamodule(emnist_datamodule, 814_255)
