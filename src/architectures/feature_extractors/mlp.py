@@ -1,6 +1,7 @@
 from torch import nn
-from .base import FeatureExtractor
 from torchtyping import TensorType
+
+from .base import FeatureExtractor
 
 
 class FeedForwardBlock(nn.Module):
@@ -46,8 +47,6 @@ class FeedForwardBlock(nn.Module):
 
 class MLP(FeatureExtractor):
     """Multi Layer Perceptron (MLP) constructed of many FeedForward blocks."""
-
-    name: str = "MLP"
 
     def __init__(
         self,

@@ -1,6 +1,11 @@
 import torch
 
-from src.data.datamodule import CIFAR10DataModule, ImageDataModule, MNISTDataModule
+from src.data.datamodule import (
+    CIFAR10DataModule,
+    FashionMNISTDataModule,
+    ImageDataModule,
+    MNISTDataModule,
+)
 from src.tests.conftest import BATCH_SIZE
 
 
@@ -37,3 +42,7 @@ def test_cifar_datamodule(cifar_datamodule: CIFAR10DataModule):
 
 def test_mnist_datamodule(mnist_datamodule: MNISTDataModule):
     _test_datamodule(mnist_datamodule, 70_000)
+
+
+def test_fashion_mnist_datamodule(fashion_mnist_datamodule: FashionMNISTDataModule):
+    _test_datamodule(fashion_mnist_datamodule, 70_000)

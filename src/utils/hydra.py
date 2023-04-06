@@ -48,6 +48,9 @@ def instantiate_head(cfg: DictConfig, in_dim: int, n_classes: int) -> Classifica
 
 def instantiate_model(cfg: DictConfig, datamodule: ImageDataModule) -> ImageClassifier:
     log.info("Instantiating Model..")
+    if "ckpt_path" in cfg:
+        log.info(f"Instantiating Model from {cfg.ckpt_path} checkpoint..")
+        return ImageClassifier.load_from_checkpoint(cfg.ckpt_path)
     feature_extractor = instantiate_feature_extractor(cfg, datamodule.train.dummy_input_shape)
     head = instantiate_head(cfg, in_dim=feature_extractor.out_dim, n_classes=datamodule.n_classes)
     return instantiate(cfg.model)(feature_extractor=feature_extractor, head=head, classes=datamodule.classes)
@@ -58,9 +61,9 @@ def instantiate_logger(cfg: DictConfig) -> Logger:
     return instantiate(cfg.logger)
 
 
-def instantiate_callbacks(cfg: DictConfig) -> list[Callback]:
+def instantiate_callbacks(cfg: DictConfig) -> dict[str, Callback]:
     log.info("Instantiating Callbacks..")
-    return [instantiate(cbk_cfg) for _, cbk_cfg in cfg.callbacks.items()]
+    return {name: instantiate(cbk_cfg) for name, cbk_cfg in cfg.callbacks.items()}
 
 
 def instantiate_trainer(cfg: DictConfig, logger: Logger, callbacks: list[Callback], **kwargs) -> Trainer:

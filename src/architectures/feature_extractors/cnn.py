@@ -1,8 +1,11 @@
-from torch import nn
-from .base import FeatureExtractor
 from typing import Literal
-from src.utils.types import _size_2_t, _size_2_t_list
+
+from torch import nn
 from torchtyping import TensorType
+
+from src.utils.types import _size_2_t, _size_2_t_list
+
+from .base import FeatureExtractor
 
 
 class CNNBlock(nn.Module):
@@ -72,8 +75,6 @@ class CNNBlock(nn.Module):
 
 class DeepCNN(FeatureExtractor):
     """Deep Convolutional Neural Network (CNN) constructed of many CNN blocks and ended with Global Average Pooling."""
-
-    name: str = "DeepCNN"
 
     def __init__(
         self,

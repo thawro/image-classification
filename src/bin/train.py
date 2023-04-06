@@ -2,7 +2,9 @@ import hydra
 import torch
 from omegaconf import DictConfig
 from pytorch_lightning import seed_everything
+from pytorch_lightning.callbacks import ModelCheckpoint
 
+from src.bin.evaluate import evaluate
 from src.utils.hydra import (
     instantiate_callbacks,
     instantiate_datamodule,
@@ -20,12 +22,17 @@ def main(cfg: DictConfig):
     torch.set_float32_matmul_precision("medium")
     datamodule = instantiate_datamodule(cfg)
     model = instantiate_model(cfg, datamodule=datamodule)
+    if cfg.run_name == "auto":
+        cfg.run_name = f"{model.name}"
     logger = instantiate_logger(cfg)
     callbacks = instantiate_callbacks(cfg)
-    trainer = instantiate_trainer(cfg, logger=logger, callbacks=callbacks)
+    trainer = instantiate_trainer(cfg, logger=logger, callbacks=list(callbacks.values()))
     params = {"dataset": datamodule.name, "model": model.feature_extractor.name}
     logger.log_hyperparams(params)
     trainer.fit(model, datamodule=datamodule)
+
+    ckpt_callback: ModelCheckpoint = callbacks["model_checkpoint"]
+    evaluate(trainer, model, datamodule, ckpt_callback.best_model_path)
     close_loggers()
 
 

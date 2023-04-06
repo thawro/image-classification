@@ -9,7 +9,7 @@ defaults:
   - override /hydra: default.yaml
   - override /model: default.yaml
 
-run_name: test
+run_name: auto
 
 datamodule:
   batch_size: 128

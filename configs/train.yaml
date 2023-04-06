@@ -17,5 +17,5 @@ defaults:
   - debug: null
 
 project_name: image_classification
-run_name: test
+run_name: auto
 seed: 42

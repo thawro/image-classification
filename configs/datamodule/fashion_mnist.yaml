@@ -1,0 +1,6 @@
+_target_: src.data.datamodule.FashionMNISTDataModule
+data_dir: ./data
+train_transform: null
+inference_transform: null
+batch_size: 64
+seed: ${seed}

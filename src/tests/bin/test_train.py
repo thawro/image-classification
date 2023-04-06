@@ -47,9 +47,10 @@ def test_train_initialize(
         assert isinstance(logger, Logger)
 
         callbacks = instantiate_callbacks(cfg)
-        assert all(isinstance(cbk, Callback) for cbk in callbacks)
+        print(callbacks)
+        assert all(isinstance(cbk, Callback) for name, cbk in callbacks.items())
 
-        trainer = instantiate_trainer(cfg, logger=logger, callbacks=callbacks)
+        trainer = instantiate_trainer(cfg, logger=logger, callbacks=list(callbacks.values()))
         assert isinstance(trainer, Trainer)
         close_loggers()
 

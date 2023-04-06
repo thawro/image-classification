@@ -1,4 +1,5 @@
 # from lightning.pytorch import LightningDataModule
+import random
 from abc import abstractmethod
 
 import matplotlib.pyplot as plt
@@ -10,7 +11,7 @@ from pytorch_lightning import LightningDataModule
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, Dataset
 from torchtyping import TensorType
-from torchvision.datasets import CIFAR10, CIFAR100, MNIST
+from torchvision.datasets import CIFAR10, CIFAR100, MNIST, FashionMNIST
 
 from src.utils.types import Callable, Optional, _Image_Dataset, _int_array, _stage
 
@@ -86,6 +87,18 @@ class ImageDataModule(LightningDataModule):
         self.batch_size = batch_size
         self.seed = seed
         self.train, self.val, self.test = None, None, None
+
+    def state_dict(self):
+        return {
+            "random_state": random.getstate(),
+            "torch_random_state": torch.random.get_rng_state(),
+            "numpy_random_state": np.random.get_state(),
+        }
+
+    def load_state_dict(self, state_dict):
+        random.setstate(state_dict["random_state"])
+        torch.random.set_rng_state(state_dict["torch_random_state"])
+        np.random.set_state(state_dict["numpy_random_state"])
 
     @abstractmethod
     def data_loading_fn(self, *args, **kwargs) -> _Image_Dataset:
@@ -168,3 +181,8 @@ class CIFAR10DataModule(ImageDataModule):
 class CIFAR100DataModule(ImageDataModule):
     def data_loading_fn(self, *args, **kwargs) -> CIFAR100:
         return CIFAR100(*args, **kwargs)
+
+
+class FashionMNISTDataModule(ImageDataModule):
+    def data_loading_fn(self, *args, **kwargs) -> FashionMNIST:
+        return FashionMNIST(*args, **kwargs)

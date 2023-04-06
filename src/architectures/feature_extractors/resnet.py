@@ -1,11 +1,14 @@
-"""Implementation based on https://arxiv.org/pdf/1512.03385.pdf 
+"""Implementation based on https://arxiv.org/pdf/1512.03385.pdf
 with modifications suggested in https://github.com/pytorch/vision/blob/main/torchvision/models/resnet.py"""
-from torch import nn
-from typing import Literal
 from collections import OrderedDict
-from .base import FeatureExtractor
-from src.utils.types import _size_2_t
+from typing import Literal
+
+from torch import nn
 from torchtyping import TensorType
+
+from src.utils.types import _size_2_t
+
+from .base import FeatureExtractor
 
 
 class BasicBlock(nn.Module):
@@ -221,8 +224,6 @@ class BottleneckResNetCore(nn.Module):
 class ResNet(FeatureExtractor):
     """Convolutional Neural Network with residual connextions"""
 
-    name: str = "ResNet"
-
     def __init__(
         self,
         in_channels: int,
@@ -259,9 +260,7 @@ class ResNet(FeatureExtractor):
                     ("maxpool", nn.MaxPool2d(kernel_size=pool_kernel_size, stride=2)),
                     (
                         "residual_layers",
-                        ResnetCoreBlocks(
-                            in_channels=stem_channels, stages_n_blocks=stages_n_blocks
-                        ),
+                        ResnetCoreBlocks(in_channels=stem_channels, stages_n_blocks=stages_n_blocks),
                     ),
                     ("global_pool", nn.AdaptiveAvgPool2d((1, 1))),
                     ("flatten", nn.Flatten()),

@@ -6,6 +6,7 @@ from torchvision.transforms import Compose, Normalize, RandomRotation, ToTensor
 from src.data.datamodule import (
     CIFAR10DataModule,
     CIFAR100DataModule,
+    FashionMNISTDataModule,
     ImageDataset,
     MNISTDataModule,
 )
@@ -108,6 +109,18 @@ def mnist_dataset(request: pytest.FixtureRequest):
 def mnist_datamodule(request: pytest.FixtureRequest) -> MNISTDataModule:
     transforms = request.param
     datamodule = MNISTDataModule(
+        data_dir=str(ROOT / "data"),
+        train_transform=transforms["train"],
+        inference_transform=transforms["inference"],
+        batch_size=BATCH_SIZE,
+    )
+    return datamodule
+
+
+@pytest.fixture(params=MNIST_TRANSFORMS)
+def fashion_mnist_datamodule(request: pytest.FixtureRequest) -> FashionMNISTDataModule:
+    transforms = request.param
+    datamodule = FashionMNISTDataModule(
         data_dir=str(ROOT / "data"),
         train_transform=transforms["train"],
         inference_transform=transforms["inference"],

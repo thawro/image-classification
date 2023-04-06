@@ -1,6 +1,6 @@
 import pytest
-from src.utils.types import Sequence
-from src.evaluation.metrics import get_classification_metrics
+
+from src.evaluation.metrics import _y_type, get_classification_metrics
 
 
 @pytest.mark.parametrize(
@@ -15,8 +15,8 @@ from src.evaluation.metrics import get_classification_metrics
     ],
 )
 def test_classification_metrics(
-    y_true: Sequence,
-    y_pred: Sequence,
+    y_true: _y_type,
+    y_pred: _y_type,
 ):
     metrics = get_classification_metrics(y_true, y_pred)
     assert isinstance(metrics, dict)

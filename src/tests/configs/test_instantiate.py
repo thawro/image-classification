@@ -1,7 +1,12 @@
 import hydra
 import pytest
 from pytorch_lightning import LightningModule, Trainer
-from pytorch_lightning.callbacks import Callback, EarlyStopping, RichProgressBar
+from pytorch_lightning.callbacks import (
+    Callback,
+    EarlyStopping,
+    ModelCheckpoint,
+    RichProgressBar,
+)
 from pytorch_lightning.loggers import Logger
 from pytorch_lightning.loggers.wandb import WandbLogger
 from torch import nn
@@ -14,6 +19,7 @@ from src.architectures.model import ImageClassifier
 from src.data.datamodule import (
     CIFAR10DataModule,
     CIFAR100DataModule,
+    FashionMNISTDataModule,
     ImageDataModule,
     ImageDataset,
     MNISTDataModule,
@@ -28,6 +34,7 @@ from src.utils.types import Callable
 @pytest.mark.parametrize(
     "cfg_path, expected",
     [
+        ["model_checkpoint.yaml", [ModelCheckpoint]],
         ["best_examples.yaml", [ExamplePredictionsLogger]],
         ["random_examples.yaml", [ExamplePredictionsLogger]],
         ["worst_examples.yaml", [ExamplePredictionsLogger]],
@@ -36,6 +43,7 @@ from src.utils.types import Callable
         [
             "default.yaml",
             [
+                ModelCheckpoint,
                 RichProgressBar,
                 EarlyStopping,
                 ExamplePredictionsLogger,
@@ -68,6 +76,7 @@ def test_callbacks(
         ["cifar10.yaml", CIFAR10DataModule],
         ["cifar100.yaml", CIFAR100DataModule],
         ["mnist.yaml", MNISTDataModule],
+        ["fashion_mnist.yaml", FashionMNISTDataModule],
     ],
 )
 def test_datamodule(
