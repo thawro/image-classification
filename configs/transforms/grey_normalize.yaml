@@ -1,8 +1,8 @@
-normalize:
+grey_normalize:
   train:
-    _target_: data.transforms.ImgNormalize
+    _target_: src.data.transforms.ImgNormalize
     n_channels: 1
 
   inference:
-    _target_: data.transforms.ImgNormalize
+    _target_: src.data.transforms.ImgNormalize
     n_channels: 1

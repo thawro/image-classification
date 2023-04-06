@@ -4,7 +4,7 @@ version = "0.1.0"
 description = ""
 authors = ["shate <tomashawro.kontakt@gmail.com>"]
 readme = "README.md"
-packages = [{include = "src"}]
+packages = [{ include = "src" }]
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -19,6 +19,11 @@ plotly = "^5.14.0"
 rich = "^13.3.3"
 wandb = "^0.14.0"
 pytest = "^7.2.2"
+torchtyping = "^0.1.4"
+pre-commit = "^3.2.2"
+black = "^23.3.0"
+blacken-docs = "^1.13.0"
+isort = "^5.12.0"
 
 
 [build-system]

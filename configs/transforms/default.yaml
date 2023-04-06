@@ -1,3 +1,4 @@
 defaults:
+  - to_tensor.yaml
   - grey_normalize.yaml
   - _self_

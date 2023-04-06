@@ -1,24 +1,12 @@
 from torch import nn
-import torch.nn.functional as F
-from .feature_extractors.base import FeatureExtractor
+from torchtyping import TensorType
 
 
 class ClassificationHead(nn.Module):
-    def __init__(self, in_dim, out_dim):
+    def __init__(self, in_dim: int, n_classes: int):
         super().__init__()
-        self.net = nn.Linear(in_dim, out_dim)
+        self.net = nn.Linear(in_dim, n_classes)
 
-    def forward(self, x):
+    def forward(self, x: TensorType["batch", "in_dim"]) -> TensorType["batch", "n_classes"]:
         out = self.net(x)
         return out
-
-
-class Classifier(nn.Module):
-    def __init__(self, feature_extractor: FeatureExtractor, head: nn.Module):
-        super().__init__()
-        self.feature_extractor = feature_extractor
-        self.head = head
-
-    def forward(self, x):
-        out = self.feature_extractor(x)
-        return self.head(out)

@@ -1,8 +1,8 @@
-permute_channels:
+permute:
   train:
-    _target_: data.transforms.Permute
+    _target_: src.data.transforms.Permute
     dims: [2, 0, 1]
 
   inference:
-    _target_: data.transforms.Permute
+    _target_: src.data.transforms.Permute
     dims: [2, 0, 1]

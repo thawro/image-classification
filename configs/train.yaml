@@ -5,7 +5,7 @@ defaults:
   # - callbacks: default.yaml
   - datamodule: mnist.yaml
   - feature_extractor: mlp.yaml
-  - transforms: [permute.yaml]
+  - transforms: default.yaml
   - callbacks: default.yaml
   - head: default.yaml
   - hydra: default.yaml
@@ -14,7 +14,8 @@ defaults:
   - paths: default.yaml
   - trainer: default.yaml
   - experiment: null
+  - debug: null
 
 project_name: image_classification
-run_name: test
+run_name: auto
 seed: 42

@@ -1,4 +1,4 @@
-_target_: src.data.datamodule.CIFAR10DataModule
+_target_: src.data.datamodule.FashionMNISTDataModule
 data_dir: ./data
 train_transform: null
 inference_transform: null

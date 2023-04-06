@@ -1,5 +1,6 @@
-import torch
 from torch import nn
+from torchtyping import TensorType
+
 from .base import FeatureExtractor
 
 
@@ -34,7 +35,7 @@ class FeedForwardBlock(nn.Module):
         if self.use_dropout:
             self.dropout = nn.Dropout(dropout)
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: TensorType["batch", "in_dim"]) -> TensorType["batch", "out_dim"]:
         out = self.linear(x)
         out = self.activation(out)
         if self.use_batch_norm:
@@ -46,8 +47,6 @@ class FeedForwardBlock(nn.Module):
 
 class MLP(FeatureExtractor):
     """Multi Layer Perceptron (MLP) constructed of many FeedForward blocks."""
-
-    name: str = "MLP"
 
     def __init__(
         self,
@@ -79,5 +78,5 @@ class MLP(FeatureExtractor):
         self.net = nn.Sequential(*layers)
 
     @property
-    def out_shape(self):
+    def out_dim(self) -> int:
         return self.hidden_dims[-1]
