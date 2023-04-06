@@ -18,7 +18,7 @@ _img_transform = Optional[Callable[[Image.Image], Tensor]]
 
 
 class _StaticImageDataset(Protocol):
-    data: Tensor | _int_array
+    data: Tensor | _float_array
     targets: Tensor | _int_array
     classes: list[str]
     transform: Optional[Callable[[Image.Image], Tensor]]

@@ -4,7 +4,6 @@ from abc import abstractmethod
 
 import numpy as np
 import torch
-from PIL.Image import Image
 from pytorch_lightning import LightningDataModule
 from torch.utils.data import DataLoader
 from torchvision.datasets import (
@@ -18,10 +17,8 @@ from torchvision.datasets import (
 )
 
 from src.data.dataset import DynamicImageDataset, StaticImageDataset
-from src.utils.types import Callable, Optional, TensorType, _img_transform, _stage
-from src.utils.utils import ROOT
-
-DATA_DIR = ROOT / "data"
+from src.utils.types import Optional, _img_transform, _stage
+from src.utils.utils import DATA_DIR
 
 
 class ImageDataModule(LightningDataModule):
@@ -36,7 +33,7 @@ class ImageDataModule(LightningDataModule):
         super().__init__()
         self.train_transform = train_transform
         self.inference_transform = inference_transform
-        self.data_dir = data_dir
+        self.data_dir = f"{data_dir}/{self.name}"
         self.batch_size = batch_size
         self.seed = seed
         self.train, self.val, self.test = None, None, None
@@ -203,6 +200,24 @@ class EMNISTDataModule(StaticImageDataModule):
     def download_data(self):
         EMNIST(root=self.data_dir, train=True, split=self.target_type, download=True)
         EMNIST(root=self.data_dir, train=False, split=self.target_type, download=True)
+
+
+class SVHNDataModule(StaticImageDataModule):
+    mode: str = "train_split"
+
+    def load_dataset(self, split: str) -> StaticImageDataset:
+        transform = self.train_transform if split == "train" else self.inference_transform
+        dataset = SVHN(
+            root=self.data_dir,
+            split=split,
+            download=False,
+            transform=transform,
+        )
+        return StaticImageDataset.from_external(dataset)
+
+    def download_data(self):
+        SVHN(root=self.data_dir, split="train", download=True)
+        SVHN(root=self.data_dir, split="test", download=True)
 
 
 class CelebADataModule(DynamicImageDataModule):

@@ -24,6 +24,7 @@ from src.data.datamodule import (
     FashionMNISTDataModule,
     ImageDataModule,
     MNISTDataModule,
+    SVHNDataModule,
 )
 from src.data.dataset import StaticImageDataset
 from src.data.transforms import ImgNormalize, Permute
@@ -81,6 +82,7 @@ def test_callbacks(
         ["fashion_mnist.yaml", FashionMNISTDataModule],
         ["emnist.yaml", EMNISTDataModule],
         ["celeb_a.yaml", CelebADataModule],
+        ["svhn.yaml", SVHNDataModule],
     ],
 )
 def test_datamodule(

@@ -12,16 +12,20 @@ from src.utils.types import (
     Self,
     Tensor,
     TensorType,
+    _float_array,
     _img_transform,
     _int_array,
     _StaticImageDataset,
 )
+from src.utils.utils import log
 
 
 class StaticImageDataset(Dataset):
     def __init__(
         self,
-        data: TensorType["batch", "height", "width", "channels"] | TensorType["batch", "height", "width"] | _int_array,
+        data: TensorType["batch", "height", "width", "channels"]
+        | TensorType["batch", "height", "width"]
+        | _float_array,
         targets: TensorType["batch"] | _int_array,
         classes: list[str],
         transform: _img_transform = None,
@@ -90,7 +94,31 @@ class StaticImageDataset(Dataset):
 
     @classmethod
     def from_external(cls, dataset: _StaticImageDataset) -> Self:
-        return StaticImageDataset(dataset.data, dataset.targets, dataset.classes, dataset.transform)
+        data = dataset.data
+        ds_name = dataset.__class__.__name__
+        shape = np.array(data.shape)
+        if len(shape) > 3:  # omit MNIST case
+            n_channels = 3 if 3 in shape else 1  # RGB or GREY
+            shape_idx = np.where(shape == n_channels)[0][0]
+
+            if shape_idx == 1:
+                log.info("Transposing data from [N, C, H, W] to [N, H, W, C] shape")
+                data = data.transpose(0, 2, 3, 1)  # N, C, H, W -> N, H, W, C
+        try:
+            targets = dataset.targets
+        except AttributeError as e:
+            log.error(e)
+            log.info(f"Dataset {ds_name} has no 'targets' attr. Using 'labels' attr instead.")
+            targets = dataset.labels
+
+        try:
+            classes = dataset.classes
+        except AttributeError as e:
+            log.error(e)
+            log.info(f"Dataset {ds_name} has no 'classes' attr. Using unique targets instead.")
+            classes = [str(class_) for class_ in np.unique(targets)]
+
+        return StaticImageDataset(data, targets, classes, dataset.transform)
 
 
 class DynamicImageDataset(Dataset):
