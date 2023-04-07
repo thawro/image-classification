@@ -1,4 +1,4 @@
-from typing import Callable, Literal, Optional, Protocol, Self, Sequence
+from typing import Any, Callable, Literal, Optional, Protocol, Self, Sequence
 
 import numpy as np
 from numpy.typing import NDArray

@@ -1,4 +1,4 @@
-horizontal_flip:
+random_horizontal_flip:
   train:
     _target_: torchvision.transforms.RandomHorizontalFlip
     p: 0.5

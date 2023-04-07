@@ -1,6 +1,6 @@
 import hydra
 import torch
-from omegaconf import DictConfig
+from omegaconf import DictConfig, OmegaConf
 from pytorch_lightning import seed_everything
 from pytorch_lightning.callbacks import ModelCheckpoint
 
@@ -25,6 +25,7 @@ def main(cfg: DictConfig):
     if cfg.run_name == "auto":
         cfg.run_name = f"{model.name}"
     logger = instantiate_logger(cfg)
+    logger.log_config(OmegaConf.to_object(cfg))
     callbacks = instantiate_callbacks(cfg)
     trainer = instantiate_trainer(cfg, logger=logger, callbacks=list(callbacks.values()))
     params = {"dataset": datamodule.name, "model": model.feature_extractor.name}

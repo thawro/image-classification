@@ -2,13 +2,13 @@ import torch
 from hydra.utils import instantiate
 from omegaconf import DictConfig
 from pytorch_lightning import Callback, Trainer
-from pytorch_lightning.loggers import Logger
 from torchvision.transforms import Compose
 
 from src.architectures.feature_extractors.base import FeatureExtractor
 from src.architectures.head import ClassificationHead
 from src.architectures.model import ImageClassifier
 from src.data.datamodule import ImageDataModule
+from src.loggers.base import BaseLogger
 from src.utils.utils import log
 
 
@@ -23,7 +23,7 @@ def instantiate_transforms(cfg: DictConfig) -> tuple[Compose, Compose]:
 def instantiate_datamodule(cfg: DictConfig) -> ImageDataModule:
     log.info("Instantiating DataModule..")
     train_transform, inference_transform = instantiate_transforms(cfg)
-    datamodule = instantiate(cfg.datamodule, train_transform=train_transform, inference_transform=inference_transform)
+    datamodule = instantiate(cfg.datamodule)(train_transform=train_transform, inference_transform=inference_transform)
     datamodule.download_data()
     datamodule.setup(stage="fit")
     return datamodule
@@ -56,7 +56,7 @@ def instantiate_model(cfg: DictConfig, datamodule: ImageDataModule) -> ImageClas
     return instantiate(cfg.model)(feature_extractor=feature_extractor, head=head, classes=datamodule.classes)
 
 
-def instantiate_logger(cfg: DictConfig) -> Logger:
+def instantiate_logger(cfg: DictConfig) -> BaseLogger:
     log.info("Instantiating Logger..")
     return instantiate(cfg.logger)
 
@@ -66,6 +66,6 @@ def instantiate_callbacks(cfg: DictConfig) -> dict[str, Callback]:
     return {name: instantiate(cbk_cfg) for name, cbk_cfg in cfg.callbacks.items()}
 
 
-def instantiate_trainer(cfg: DictConfig, logger: Logger, callbacks: list[Callback], **kwargs) -> Trainer:
+def instantiate_trainer(cfg: DictConfig, logger: BaseLogger, callbacks: list[Callback], **kwargs) -> Trainer:
     log.info("Instantiating Trainer..")
     return instantiate(cfg.trainer, logger=logger, callbacks=callbacks, **kwargs)

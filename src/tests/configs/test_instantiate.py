@@ -8,7 +8,6 @@ from pytorch_lightning.callbacks import (
     RichProgressBar,
 )
 from pytorch_lightning.loggers import Logger
-from pytorch_lightning.loggers.wandb import WandbLogger
 from torch import nn
 from torch.nn import Flatten, Identity
 from torchvision.transforms import RandomHorizontalFlip, RandomRotation, ToTensor
@@ -29,6 +28,7 @@ from src.data.datamodule import (
 from src.data.dataset import StaticImageDataset
 from src.data.transforms import ImgNormalize, Permute
 from src.evaluation.callbacks import ExamplePredictionsLogger
+from src.loggers.wandb import WandbLoggerWrapper
 from src.tests.utils import CONFIG_NAME, CONFIGS_PATH, create_hydra_config
 from src.utils.hydra import instantiate_feature_extractor
 from src.utils.types import Callable
@@ -151,7 +151,7 @@ def test_head(
 @pytest.mark.parametrize(
     "cfg_path, expected",
     [
-        ["wandb.yaml", WandbLogger],
+        ["wandb.yaml", WandbLoggerWrapper],
     ],
 )
 def test_logger(
@@ -221,9 +221,9 @@ def test_trainer(
         ["flatten.yaml", [(Flatten, Flatten)]],
         ["grey_normalize.yaml", [(ImgNormalize, ImgNormalize)]],
         ["rgb_normalize.yaml", [(ImgNormalize, ImgNormalize)]],
-        ["horizontal_flip.yaml", [(RandomHorizontalFlip, Identity)]],
+        ["random_horizontal_flip.yaml", [(RandomHorizontalFlip, Identity)]],
         ["permute.yaml", [(Permute, Permute)]],
-        ["rotation.yaml", [(RandomRotation, Identity)]],
+        ["random_rotation.yaml", [(RandomRotation, Identity)]],
         ["to_tensor.yaml", [(ToTensor, ToTensor)]],
         ["default.yaml", [(ToTensor, ToTensor), (ImgNormalize, ImgNormalize)]],
     ],

@@ -1,0 +1,24 @@
+# @package _global_
+
+defaults:
+  - override /datamodule: mnist.yaml
+  - override /feature_extractor: mlp.yaml
+  - override /transforms:
+      [
+        to_tensor.yaml,
+        grey_normalize.yaml,
+        random_horizontal_flip.yaml,
+        random_rotation.yaml,
+      ]
+  - override /callbacks: default.yaml
+  - override /head: classification_head.yaml
+  - override /hydra: default.yaml
+  - override /model: image_classifier.yaml
+
+transforms:
+  random_rotation:
+    train:
+      degrees: 10
+  random_horizontal_flip:
+    train:
+      p: 0.5

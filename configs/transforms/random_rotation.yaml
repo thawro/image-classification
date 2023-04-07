@@ -1,4 +1,4 @@
-rotation:
+random_rotation:
   train:
     _target_: torchvision.transforms.RandomRotation
     degrees: 15
