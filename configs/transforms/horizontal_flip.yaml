@@ -1,6 +1,0 @@
-horizontal_flip:
-  train:
-    _target_: torchvision.transforms.RandomHorizontalFlip
-    p: 0.5
-  inference:
-    _target_: torch.nn.Identity

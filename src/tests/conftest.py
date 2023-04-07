@@ -4,14 +4,15 @@ import torch
 from torchvision.transforms import Compose, Normalize, RandomRotation, ToTensor
 
 from src.data.datamodule import (
+    CelebADataModule,
     CIFAR10DataModule,
-    CIFAR100DataModule,
+    EMNISTDataModule,
     FashionMNISTDataModule,
-    ImageDataset,
     MNISTDataModule,
+    StaticImageDataset,
+    SVHNDataModule,
 )
 from src.data.transforms import MEAN_IMAGENET, MEAN_MNIST, STD_IMAGENET, STD_MNIST
-from src.utils.utils import ROOT
 
 
 def get_transforms(mean, std):
@@ -74,20 +75,19 @@ def transformed_cifar100_batch() -> torch.Tensor:
 
 
 @pytest.fixture(params=IMAGENET_TRANSFORMS)
-def cifar_dataset(request: pytest.FixtureRequest) -> ImageDataset:
+def cifar_dataset(request: pytest.FixtureRequest) -> StaticImageDataset:
     _size = (BATCH_SIZE, 32, 32, 3)
     classes = [str(i) for i in range(10)]
     data = np.random.randint(0, 256, _size)
     targets = np.random.randint(0, len(classes), (BATCH_SIZE,))
     transforms = request.param
-    return ImageDataset(data, targets, classes, transforms["train"])
+    return StaticImageDataset(data, targets, classes, transforms["train"])
 
 
 @pytest.fixture(params=IMAGENET_TRANSFORMS)
 def cifar_datamodule(request: pytest.FixtureRequest) -> CIFAR10DataModule:
     transforms = request.param
     datamodule = CIFAR10DataModule(
-        data_dir=str(ROOT / "data"),
         train_transform=transforms["train"],
         inference_transform=transforms["inference"],
         batch_size=BATCH_SIZE,
@@ -96,20 +96,19 @@ def cifar_datamodule(request: pytest.FixtureRequest) -> CIFAR10DataModule:
 
 
 @pytest.fixture(params=MNIST_TRANSFORMS)
-def mnist_dataset(request: pytest.FixtureRequest):
+def mnist_dataset(request: pytest.FixtureRequest) -> StaticImageDataset:
     _size = (BATCH_SIZE, 28, 28, 1)
     classes = [str(i) for i in range(10)]
     data = torch.randint(0, 256, _size)
     targets = torch.randint(0, len(classes), (BATCH_SIZE,))
     transforms = request.param
-    return ImageDataset(data, targets, classes, transforms["train"])
+    return StaticImageDataset(data, targets, classes, transforms["train"])
 
 
 @pytest.fixture(params=MNIST_TRANSFORMS)
 def mnist_datamodule(request: pytest.FixtureRequest) -> MNISTDataModule:
     transforms = request.param
     datamodule = MNISTDataModule(
-        data_dir=str(ROOT / "data"),
         train_transform=transforms["train"],
         inference_transform=transforms["inference"],
         batch_size=BATCH_SIZE,
@@ -121,7 +120,39 @@ def mnist_datamodule(request: pytest.FixtureRequest) -> MNISTDataModule:
 def fashion_mnist_datamodule(request: pytest.FixtureRequest) -> FashionMNISTDataModule:
     transforms = request.param
     datamodule = FashionMNISTDataModule(
-        data_dir=str(ROOT / "data"),
+        train_transform=transforms["train"],
+        inference_transform=transforms["inference"],
+        batch_size=BATCH_SIZE,
+    )
+    return datamodule
+
+
+@pytest.fixture(params=MNIST_TRANSFORMS)
+def emnist_datamodule(request: pytest.FixtureRequest) -> EMNISTDataModule:
+    transforms = request.param
+    datamodule = EMNISTDataModule(
+        train_transform=transforms["train"],
+        inference_transform=transforms["inference"],
+        batch_size=BATCH_SIZE,
+    )
+    return datamodule
+
+
+@pytest.fixture(params=IMAGENET_TRANSFORMS)
+def celeb_a_datamodule(request: pytest.FixtureRequest) -> CelebADataModule:
+    transforms = request.param
+    datamodule = CelebADataModule(
+        train_transform=transforms["train"],
+        inference_transform=transforms["inference"],
+        batch_size=BATCH_SIZE,
+    )
+    return datamodule
+
+
+@pytest.fixture(params=IMAGENET_TRANSFORMS)
+def svhn_datamodule(request: pytest.FixtureRequest) -> SVHNDataModule:
+    transforms = request.param
+    datamodule = SVHNDataModule(
         train_transform=transforms["train"],
         inference_transform=transforms["inference"],
         batch_size=BATCH_SIZE,

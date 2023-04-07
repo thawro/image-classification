@@ -8,7 +8,6 @@ from pytorch_lightning.callbacks import (
     RichProgressBar,
 )
 from pytorch_lightning.loggers import Logger
-from pytorch_lightning.loggers.wandb import WandbLogger
 from torch import nn
 from torch.nn import Flatten, Identity
 from torchvision.transforms import RandomHorizontalFlip, RandomRotation, ToTensor
@@ -17,15 +16,19 @@ from src.architectures.feature_extractors import base, cnn, mlp, resnet
 from src.architectures.head import ClassificationHead
 from src.architectures.model import ImageClassifier
 from src.data.datamodule import (
+    CelebADataModule,
     CIFAR10DataModule,
     CIFAR100DataModule,
+    EMNISTDataModule,
     FashionMNISTDataModule,
     ImageDataModule,
-    ImageDataset,
     MNISTDataModule,
+    SVHNDataModule,
 )
+from src.data.dataset import StaticImageDataset
 from src.data.transforms import ImgNormalize, Permute
 from src.evaluation.callbacks import ExamplePredictionsLogger
+from src.loggers.wandb import WandbLoggerWrapper
 from src.tests.utils import CONFIG_NAME, CONFIGS_PATH, create_hydra_config
 from src.utils.hydra import instantiate_feature_extractor
 from src.utils.types import Callable
@@ -77,6 +80,9 @@ def test_callbacks(
         ["cifar100.yaml", CIFAR100DataModule],
         ["mnist.yaml", MNISTDataModule],
         ["fashion_mnist.yaml", FashionMNISTDataModule],
+        ["emnist.yaml", EMNISTDataModule],
+        ["celeb_a.yaml", CelebADataModule],
+        ["svhn.yaml", SVHNDataModule],
     ],
 )
 def test_datamodule(
@@ -106,7 +112,7 @@ def test_datamodule(
 def test_feature_extractor(
     cfg_path: str,
     expected: base.FeatureExtractor,
-    mnist_dataset: ImageDataset,
+    mnist_dataset: StaticImageDataset,
     tmp_path,
 ) -> None:
     with hydra.initialize(version_base=None, config_path=str(CONFIGS_PATH)):
@@ -145,7 +151,7 @@ def test_head(
 @pytest.mark.parametrize(
     "cfg_path, expected",
     [
-        ["wandb.yaml", WandbLogger],
+        ["wandb.yaml", WandbLoggerWrapper],
     ],
 )
 def test_logger(
@@ -215,9 +221,9 @@ def test_trainer(
         ["flatten.yaml", [(Flatten, Flatten)]],
         ["grey_normalize.yaml", [(ImgNormalize, ImgNormalize)]],
         ["rgb_normalize.yaml", [(ImgNormalize, ImgNormalize)]],
-        ["horizontal_flip.yaml", [(RandomHorizontalFlip, Identity)]],
+        ["random_horizontal_flip.yaml", [(RandomHorizontalFlip, Identity)]],
         ["permute.yaml", [(Permute, Permute)]],
-        ["rotation.yaml", [(RandomRotation, Identity)]],
+        ["random_rotation.yaml", [(RandomRotation, Identity)]],
         ["to_tensor.yaml", [(ToTensor, ToTensor)]],
         ["default.yaml", [(ToTensor, ToTensor), (ImgNormalize, ImgNormalize)]],
     ],

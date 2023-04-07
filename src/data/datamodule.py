@@ -2,88 +2,38 @@
 import random
 from abc import abstractmethod
 
-import matplotlib.pyplot as plt
 import numpy as np
 import torch
-import torchvision.transforms as T
-from PIL import Image
 from pytorch_lightning import LightningDataModule
-from sklearn.model_selection import train_test_split
-from torch.utils.data import DataLoader, Dataset
-from torchtyping import TensorType
-from torchvision.datasets import CIFAR10, CIFAR100, MNIST, FashionMNIST
+from torch.utils.data import DataLoader
+from torchvision.datasets import (
+    CIFAR10,
+    CIFAR100,
+    EMNIST,
+    MNIST,
+    SVHN,
+    CelebA,
+    FashionMNIST,
+)
 
-from src.utils.types import Callable, Optional, _Image_Dataset, _int_array, _stage
-
-
-class ImageDataset(Dataset):
-    def __init__(
-        self,
-        data: TensorType["batch", "height", "width", "channels"] | TensorType["batch", "height", "width"] | _int_array,
-        targets: TensorType["batch"] | _int_array,
-        classes: list[str],
-        transform: Optional[
-            Callable[
-                [Image.Image],
-                TensorType["channels", "height", "width"],
-            ]
-        ] = None,
-    ):
-        if isinstance(data, torch.Tensor):
-            data = data.numpy().squeeze()
-        if isinstance(targets, np.ndarray):
-            targets = torch.from_numpy(targets)
-        elif isinstance(targets, list):
-            targets = torch.Tensor(targets)
-
-        data = data.astype(np.uint8)
-        targets = targets.to(torch.int64)
-        self.data = data
-        self.targets = targets
-        self.classes = classes
-        self.transform = transform if transform is not None else T.PILToTensor()
-
-    def __getitem__(self, idx: int) -> tuple[TensorType["channels", "height", "width"], torch.Tensor]:
-        img, target = self.data[idx], self.targets[idx]
-        img = Image.fromarray(img)
-        img = self.transform(img)
-        return img, target
-
-    def __len__(self):
-        return len(self.data)
-
-    @property
-    def dummy_input(self):
-        return self[0][0]
-
-    @property
-    def dummy_input_shape(self):
-        return self.dummy_input.shape
+from src.data.dataset import DynamicImageDataset, StaticImageDataset
+from src.utils.types import Optional, _img_transform, _stage
+from src.utils.utils import DATA_DIR
 
 
 class ImageDataModule(LightningDataModule):
     def __init__(
         self,
-        data_dir: str = "./data",
-        train_transform: Optional[
-            Callable[
-                [Image.Image],
-                TensorType["channels", "height", "width"],
-            ]
-        ] = None,
-        inference_transform: Optional[
-            Callable[
-                [Image.Image],
-                TensorType["channels", "height", "width"],
-            ]
-        ] = None,
+        data_dir: str = str(DATA_DIR),
+        train_transform: _img_transform = None,
+        inference_transform: _img_transform = None,
         batch_size: int = 64,
         seed: int = 42,
     ):
         super().__init__()
         self.train_transform = train_transform
         self.inference_transform = inference_transform
-        self.data_dir = data_dir
+        self.data_dir = f"{data_dir}/{self.name}"
         self.batch_size = batch_size
         self.seed = seed
         self.train, self.val, self.test = None, None, None
@@ -101,25 +51,25 @@ class ImageDataModule(LightningDataModule):
         np.random.set_state(state_dict["numpy_random_state"])
 
     @abstractmethod
-    def data_loading_fn(self, *args, **kwargs) -> _Image_Dataset:
+    def download_data(self):
         pass
 
-    def download_data(self):
-        self.data_loading_fn(self.data_dir, train=True, download=True)
-        self.data_loading_fn(self.data_dir, train=False, download=True)
+    @abstractmethod
+    def load_dataset(self, split: str):
+        pass
+
+    @abstractmethod
+    def set_train_val(self):
+        pass
+
+    def set_test(self):
+        self.test = self.load_dataset(split="test")
 
     def setup(self, stage: Optional[_stage] = None):
         if stage == "fit" or stage is None:
-            dataset = self.data_loading_fn(self.data_dir, train=True, transform=None)
-            data, targets = dataset.data, dataset.targets
-            train_idxs, val_idxs = train_test_split(range(len(data)), test_size=0.1, random_state=self.seed)
-            train_data, train_targets = data[train_idxs], np.array(targets)[train_idxs]
-            val_data, val_targets = data[val_idxs], np.array(targets)[val_idxs]
-            self.train = ImageDataset(train_data, train_targets, dataset.classes, self.train_transform)
-            self.val = ImageDataset(val_data, val_targets, dataset.classes, self.inference_transform)
+            self.set_train_val()
         if stage == "test" or stage is None:
-            dataset = self.data_loading_fn(self.data_dir, train=False, transform=self.inference_transform)
-            self.test = ImageDataset(dataset.data, dataset.targets, dataset.classes, self.inference_transform)
+            self.set_test()
 
     @property
     def n_classes(self) -> int:
@@ -127,36 +77,13 @@ class ImageDataModule(LightningDataModule):
 
     @property
     def classes(self) -> list[str]:
-        return self.train.classes
+        if self.train is not None:
+            return self.train.classes
+        return []
 
     @property
     def name(self) -> str:
         return self.__class__.__name__.replace("DataModule", "")
-
-    def plot_images(
-        self,
-        split: _stage,
-        n: int = 10,
-        transform: Optional[
-            Callable[
-                [TensorType["channels", "height", "width"]],
-                TensorType["channels", "height", "width"],
-            ]
-        ] = None,
-    ):
-        dataset = getattr(self, split)
-        fig, axes = plt.subplots(1, n, figsize=(2.5 * n, 4))
-        for (
-            idx,
-            ax,
-        ) in enumerate(axes):
-            img, label = dataset[idx]
-            if transform is not None:
-                img = transform(img)
-            img = img.permute(1, 2, 0)
-            ax.imshow(img, cmap="gray")
-            ax.set_title(f"{dataset.classes[label]}", fontsize=16)
-        return fig
 
     def train_dataloader(self):
         return DataLoader(self.train, batch_size=self.batch_size, shuffle=True, num_workers=16)
@@ -168,21 +95,146 @@ class ImageDataModule(LightningDataModule):
         return DataLoader(self.test, batch_size=self.batch_size, num_workers=16)
 
 
-class MNISTDataModule(ImageDataModule):
-    def data_loading_fn(self, *args, **kwargs) -> MNIST:
-        return MNIST(*args, **kwargs)
+class StaticImageDataModule(ImageDataModule):
+    mode: str = "train_split"
+
+    @abstractmethod
+    def load_dataset(self, split: str) -> StaticImageDataset:
+        pass
+
+    def set_train_val(self):
+        if self.mode == "train_split":
+            dataset = self.load_dataset(split="train")
+            self.train, self.val = dataset.split_into_subsets(
+                val_size=0.1,
+                seed=self.seed,
+                transforms=(self.train_transform, self.inference_transform),
+            )
+        else:
+            self.train = self.load_dataset(split="train")
+            self.val = self.load_dataset(split="val")
 
 
-class CIFAR10DataModule(ImageDataModule):
-    def data_loading_fn(self, *args, **kwargs) -> CIFAR10:
-        return CIFAR10(*args, **kwargs)
+class DynamicImageDataModule(ImageDataModule):
+    @abstractmethod
+    def load_dataset(self, split: str) -> DynamicImageDataset:
+        pass
+
+    def set_train_val(self):
+        self.train = self.load_dataset(split="train")
+        self.val = self.load_dataset(split="val")
 
 
-class CIFAR100DataModule(ImageDataModule):
-    def data_loading_fn(self, *args, **kwargs) -> CIFAR100:
-        return CIFAR100(*args, **kwargs)
+class MNISTDataModule(StaticImageDataModule):
+    mode: str = "train_split"
+
+    def load_dataset(self, split: str) -> StaticImageDataset:
+        train = split == "train"
+        transform = self.train_transform if train else self.inference_transform
+        dataset = MNIST(root=self.data_dir, train=train, download=False, transform=transform)
+        return StaticImageDataset.from_external(dataset)
+
+    def download_data(self):
+        MNIST(root=self.data_dir, train=True, download=True)
+        MNIST(root=self.data_dir, train=False, download=True)
 
 
-class FashionMNISTDataModule(ImageDataModule):
-    def data_loading_fn(self, *args, **kwargs) -> FashionMNIST:
-        return FashionMNIST(*args, **kwargs)
+class CIFAR10DataModule(StaticImageDataModule):
+    mode: str = "train_split"
+
+    def load_dataset(self, split: str) -> StaticImageDataset:
+        train = split == "train"
+        transform = self.train_transform if train else self.inference_transform
+        dataset = CIFAR10(root=self.data_dir, train=train, download=False, transform=transform)
+        return StaticImageDataset.from_external(dataset)
+
+    def download_data(self):
+        CIFAR10(root=self.data_dir, train=True, download=True)
+        CIFAR10(root=self.data_dir, train=False, download=True)
+
+
+class CIFAR100DataModule(StaticImageDataModule):
+    mode: str = "train_split"
+
+    def load_dataset(self, split: str) -> StaticImageDataset:
+        train = split == "train"
+        transform = self.train_transform if train else self.inference_transform
+        dataset = CIFAR100(root=self.data_dir, train=train, download=False, transform=transform)
+        return StaticImageDataset.from_external(dataset)
+
+    def download_data(self):
+        CIFAR100(root=self.data_dir, train=True, download=True)
+        CIFAR100(root=self.data_dir, train=False, download=True)
+
+
+class FashionMNISTDataModule(StaticImageDataModule):
+    mode: str = "train_split"
+
+    def load_dataset(self, split: str) -> StaticImageDataset:
+        train = split == "train"
+        transform = self.train_transform if train else self.inference_transform
+        dataset = FashionMNIST(root=self.data_dir, train=train, download=False, transform=transform)
+        return StaticImageDataset.from_external(dataset)
+
+    def download_data(self):
+        FashionMNIST(root=self.data_dir, train=True, download=True)
+        FashionMNIST(root=self.data_dir, train=False, download=True)
+
+
+class EMNISTDataModule(StaticImageDataModule):
+    mode: str = "train_split"
+    target_type = "byclass"
+
+    def load_dataset(self, split: str) -> StaticImageDataset:
+        train = split == "train"
+        transform = self.train_transform if train else self.inference_transform
+        dataset = EMNIST(
+            root=self.data_dir,
+            train=train,
+            split=self.target_type,
+            download=False,
+            transform=transform,
+        )
+        return StaticImageDataset.from_external(dataset)
+
+    def download_data(self):
+        EMNIST(root=self.data_dir, train=True, split=self.target_type, download=True)
+        EMNIST(root=self.data_dir, train=False, split=self.target_type, download=True)
+
+
+class SVHNDataModule(StaticImageDataModule):
+    mode: str = "train_split"
+
+    def load_dataset(self, split: str) -> StaticImageDataset:
+        transform = self.train_transform if split == "train" else self.inference_transform
+        dataset = SVHN(
+            root=self.data_dir,
+            split=split,
+            download=False,
+            transform=transform,
+        )
+        return StaticImageDataset.from_external(dataset)
+
+    def download_data(self):
+        SVHN(root=self.data_dir, split="train", download=True)
+        SVHN(root=self.data_dir, split="test", download=True)
+
+
+class CelebADataModule(DynamicImageDataModule):
+    target_type = "attr"
+
+    def load_dataset(self, split: str) -> DynamicImageDataset:
+        transform = self.train_transform if split == "train" else self.inference_transform
+        if split == "val":
+            split = "valid"
+        dataset = CelebA(
+            root=self.data_dir,
+            split=split,
+            target_type=self.target_type,
+            download=False,
+            transform=transform,
+        )
+        return DynamicImageDataset(dataset)
+
+    def download_data(self):
+        CelebA(root=self.data_dir, split="all", target_type=self.target_type, download=True)

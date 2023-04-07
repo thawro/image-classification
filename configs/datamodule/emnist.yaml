@@ -1,0 +1,5 @@
+_target_: src.data.datamodule.EMNISTDataModule
+_partial_: True # transforms must be set
+data_dir: ./data
+batch_size: 64
+seed: ${seed}

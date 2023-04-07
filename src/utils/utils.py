@@ -12,6 +12,7 @@ log = get_pylogger(__name__)
 
 STYLE = "dim"
 ROOT = Path(__file__).parent.parent.parent
+DATA_DIR = ROOT / "data"
 
 
 def print_config_tree(cfg: DictConfig, keys: list[str] | str = "all", style: str = "dim"):

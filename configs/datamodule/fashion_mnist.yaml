@@ -1,6 +1,5 @@
 _target_: src.data.datamodule.FashionMNISTDataModule
+_partial_: True # transforms must be set
 data_dir: ./data
-train_transform: null
-inference_transform: null
 batch_size: 64
 seed: ${seed}

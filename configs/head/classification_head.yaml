@@ -1,0 +1,3 @@
+_target_: src.architectures.head.ClassificationHead
+in_dim: 128
+n_classes: 10

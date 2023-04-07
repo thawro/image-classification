@@ -1,6 +1,0 @@
-rotation:
-  train:
-    _target_: torchvision.transforms.RandomRotation
-    degrees: 15
-  inference:
-    _target_: torch.nn.Identity
