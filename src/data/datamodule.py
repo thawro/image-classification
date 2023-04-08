@@ -234,7 +234,7 @@ class CelebADataModule(DynamicImageDataModule):
             download=False,
             transform=transform,
         )
-        return DynamicImageDataset(dataset)
+        return DynamicImageDataset(dataset, targets_attr="attr", classes_attr="attr_names")
 
     def download_data(self):
         CelebA(root=self.data_dir, split="all", target_type=self.target_type, download=True)

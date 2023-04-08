@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from pathlib import Path
 
 import yaml
 from pytorch_lightning import LightningModule
@@ -11,6 +12,7 @@ class BaseLogger:
         self.project_name = project_name
         self.run_name = run_name
         self.output_dir = output_dir
+        Path(output_dir).mkdir(parents=True, exist_ok=True)
 
     @abstractmethod
     def log_config(self, cfg: dict):

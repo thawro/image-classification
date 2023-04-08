@@ -1,12 +1,12 @@
 # @package _global_
 
 defaults:
-  - override /datamodule: mnist.yaml
+  - override /datamodule: cifar10.yaml
   - override /feature_extractor: mlp.yaml
   - override /transforms:
       [
         to_tensor.yaml,
-        grey_normalize.yaml,
+        rgb_normalize.yaml,
         random_horizontal_flip.yaml,
         random_rotation.yaml,
       ]
