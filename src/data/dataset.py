@@ -44,7 +44,7 @@ class StaticImageDataset(Dataset):
         self.classes = classes
         self.transform = transform if transform is not None else T.PILToTensor()
 
-    def __getitem__(self, idx: int) -> tuple[TensorType["channels", "height", "width"], torch.Tensor]:
+    def __getitem__(self, idx: int) -> tuple[TensorType["channels", "height", "width"], Tensor]:
         img, target = self.data[idx], self.targets[idx]
         img = Image.fromarray(img)
         img = self.transform(img)
@@ -64,12 +64,7 @@ class StaticImageDataset(Dataset):
     def plot_images(
         self,
         n: int = 10,
-        transform: Optional[
-            Callable[
-                [TensorType["channels", "height", "width"]],
-                TensorType["channels", "height", "width"],
-            ]
-        ] = None,
+        img_transform: Optional[Callable[[Tensor], Tensor]] = None,
     ):
         fig, axes = plt.subplots(1, n, figsize=(2.5 * n, 4))
         for (
@@ -77,8 +72,8 @@ class StaticImageDataset(Dataset):
             ax,
         ) in enumerate(axes):
             img, label = self[idx]
-            if transform is not None:
-                img = transform(img)
+            if img_transform is not None:
+                img = img_transform(img)
             img = img.permute(1, 2, 0)
             ax.imshow(img, cmap="gray")
             ax.set_title(f"{self.classes[label]}", fontsize=16)
@@ -122,8 +117,18 @@ class StaticImageDataset(Dataset):
 
 
 class DynamicImageDataset(Dataset):
-    def __init__(self, dataset: Dataset):
+    def __init__(
+        self,
+        dataset: Dataset,
+        targets_attr: Optional[str] = None,
+        classes_attr: Optional[str] = None,
+    ):
         self.dataset = dataset
+        if targets_attr is not None:
+            self.targets = getattr(dataset, targets_attr)
+        if classes_attr is not None:
+            classes = getattr(dataset, classes_attr)
+            self.classes = list(filter(None, classes))  # filter empty strings
 
     def __getitem__(self, idx: int) -> tuple[TensorType["channels", "height", "width"], torch.Tensor]:
         return self.dataset[idx]
