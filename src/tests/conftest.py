@@ -162,4 +162,4 @@ def svhn_datamodule(request: pytest.FixtureRequest) -> SVHNDataModule:
 
 @pytest.fixture
 def example_experiment_name():
-    return "test"
+    return "mnist"

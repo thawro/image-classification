@@ -43,7 +43,7 @@ def create_hydra_train_config(
     config_name: str,
     output_path: Path,
 ) -> DictConfig | ListConfig:
-    overrided_cfgs["debug"] = "one_epoch_one_batch.yaml"
+    overrided_cfgs["debug"] = "default.yaml"
     cfg = create_hydra_config(
         experiment_name=experiment_name,
         overrided_cfgs=overrided_cfgs,

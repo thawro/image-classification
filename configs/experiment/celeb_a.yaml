@@ -1,0 +1,19 @@
+# @package _global_
+
+defaults:
+  - override /datamodule: celeb_a.yaml
+  - override /feature_extractor: deep_cnn.yaml
+  - override /callbacks: default.yaml
+  - override /trainer: default.yaml
+  - override /model: multilabel_image_classifier.yaml
+  - override /transforms:
+      [
+        to_tensor.yaml,
+        rgb_normalize.yaml,
+        random_horizontal_flip.yaml,
+        random_rotation.yaml,
+      ]
+
+callbacks:
+  random_examples:
+    multilabel: True

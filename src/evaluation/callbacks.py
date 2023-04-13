@@ -1,34 +1,43 @@
+import random
+
 import pytorch_lightning as pl
 import torch
-import torch.nn.functional as F
-from .visualisations import plot_images_probabilities_plotly
-import random
-from src.architectures.model import ImageClassifier
+
+import wandb
+from src.module.base import BaseImageClassifier
 from src.utils.types import Literal
+
+from .visualisations import plot_imgs_preds_plotly, plot_imgs_probs_plotly
 
 
 class ExamplePredictionsLogger(pl.Callback):
-    def __init__(self, num_examples: int = 8, mode: Literal["random", "worst", "best"] = "random"):
+    def __init__(
+        self,
+        num_examples: int = 8,
+        multilabel: bool = False,
+        modes: list[Literal["random", "worst", "best"]] = ["random"],
+    ):
         self.num_examples = num_examples
-        self.mode = mode
+        self.modes = modes
+        self.multilabel = multilabel
+        self.plot_fn = plot_imgs_preds_plotly if multilabel else plot_imgs_probs_plotly
         super().__init__()
 
-    def on_validation_epoch_end(self, trainer: pl.Trainer, pl_module: ImageClassifier):
+    def on_validation_epoch_end(self, trainer: pl.Trainer, pl_module: BaseImageClassifier):
         if trainer.state.fn != "fit" or trainer.sanity_checking:
             return
-        outputs = pl_module.val_step_outputs
-        imgs = torch.concat([output["data"] for output in outputs]).permute(0, 2, 3, 1)
-        probs = torch.concat([output["probs"] for output in outputs])
-        targets = torch.concat([output["targets"] for output in outputs])
-        if self.mode == "random":
-            idxs = random.choices(range(len(targets)), k=self.num_examples)
-        else:
-            multiplier = -1 if self.mode == "best" else 1
-            sorted_metric = F.nll_loss(torch.log(probs), targets, reduction="none") * multiplier
-            idxs = torch.topk(sorted_metric, self.num_examples).indices.tolist()
+        examples = pl_module.examples["val"]
+        loss, probs, targets = examples["loss"], examples["probs"], examples["targets"]
+        imgs = examples["data"].permute(0, 2, 3, 1)
 
-        imgs, probs, targets = imgs[idxs], probs[idxs], targets[idxs]
-        img_probabilities_plot = plot_images_probabilities_plotly(
-            imgs, targets, probs, pl_module.classes
-        )
-        pl_module.metrics[f"{self.mode}_examples"] = img_probabilities_plot
+        if self.multilabel:
+            loss = loss.mean(dim=1)
+        for mode in self.modes:
+            if mode == "random":
+                idxs = random.choices(range(len(targets)), k=self.num_examples)
+            else:
+                multiplier = -1 if mode == "best" else 1
+                sorted_metric = loss * multiplier
+                idxs = torch.topk(sorted_metric, self.num_examples).indices.tolist()
+            img_probabilities_plot = self.plot_fn(imgs[idxs], targets[idxs], probs[idxs], pl_module.classes)
+            pl_module.logged_metrics[f"examples/{mode}"] = wandb.Plotly(img_probabilities_plot)

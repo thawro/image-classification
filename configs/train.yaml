@@ -7,10 +7,9 @@ defaults:
   - feature_extractor: mlp.yaml
   - transforms: default.yaml
   - callbacks: default.yaml
-  - head: classification_head.yaml
   - hydra: default.yaml
   - logger: wandb.yaml
-  - model: image_classifier.yaml
+  - model: multiclass_image_classifier.yaml
   - paths: default.yaml
   - trainer: default.yaml
   - experiment: null
@@ -19,6 +18,6 @@ defaults:
 datamodule:
   batch_size: 128
 
-project_name: image_classification
+project_name: img_classification
 run_name: auto
 seed: 42

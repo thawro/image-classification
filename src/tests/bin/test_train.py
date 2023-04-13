@@ -3,9 +3,9 @@ from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import Callback
 from pytorch_lightning.loggers import Logger
 
-from src.architectures.model import ImageClassifier
 from src.bin.train import main
 from src.data.datamodule import ImageDataModule
+from src.module.multiclass import MulticlassImageClassifier
 from src.tests.utils import CONFIG_NAME, CONFIGS_PATH, create_hydra_train_config
 from src.utils.hydra import (
     instantiate_callbacks,
@@ -41,7 +41,7 @@ def test_train_initialize(
         assert isinstance(datamodule, ImageDataModule)
 
         model = instantiate_model(cfg, datamodule=datamodule)
-        assert isinstance(model, ImageClassifier)
+        assert isinstance(model, MulticlassImageClassifier)
 
         logger = instantiate_logger(cfg)
         assert isinstance(logger, Logger)

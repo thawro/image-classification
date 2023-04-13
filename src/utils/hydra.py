@@ -6,9 +6,9 @@ from torchvision.transforms import Compose
 
 from src.architectures.feature_extractors.base import FeatureExtractor
 from src.architectures.head import ClassificationHead
-from src.architectures.model import ImageClassifier
 from src.data.datamodule import ImageDataModule
 from src.loggers.base import BaseLogger
+from src.module.base import BaseImageClassifier
 from src.utils.utils import log
 
 
@@ -46,14 +46,13 @@ def instantiate_head(cfg: DictConfig, in_dim: int, n_classes: int) -> Classifica
     return instantiate(cfg.head, in_dim=in_dim, n_classes=n_classes)
 
 
-def instantiate_model(cfg: DictConfig, datamodule: ImageDataModule) -> ImageClassifier:
+def instantiate_model(cfg: DictConfig, datamodule: ImageDataModule) -> BaseImageClassifier:
     log.info("Instantiating Model..")
     if "ckpt_path" in cfg:
         log.info(f"Instantiating Model from {cfg.ckpt_path} checkpoint..")
-        return ImageClassifier.load_from_checkpoint(cfg.ckpt_path)
+        return BaseImageClassifier.load_from_checkpoint(cfg.ckpt_path)
     feature_extractor = instantiate_feature_extractor(cfg, datamodule.train.dummy_input_shape)
-    head = instantiate_head(cfg, in_dim=feature_extractor.out_dim, n_classes=datamodule.n_classes)
-    return instantiate(cfg.model)(feature_extractor=feature_extractor, head=head, classes=datamodule.classes)
+    return instantiate(cfg.model)(feature_extractor=feature_extractor, classes=datamodule.classes)
 
 
 def instantiate_logger(cfg: DictConfig) -> BaseLogger:
