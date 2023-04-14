@@ -8,6 +8,7 @@ from torchtyping import TensorType
 
 import wandb
 from src.architectures.feature_extractors.base import FeatureExtractor
+from src.architectures.head import ClassificationHead
 from src.utils.namespace import SPLITS
 from src.utils.types import Outputs, Tensor, _metrics_average, _stage
 
@@ -16,6 +17,9 @@ class BaseImageClassifier(LightningModule):
     def __init__(
         self,
         feature_extractor: FeatureExtractor,
+        head: ClassificationHead,
+        loss_fn: nn.Module,
+        metrics: MetricCollection,
         classes: list[str],
         lr: float = 1e-3,
     ):
@@ -23,6 +27,8 @@ class BaseImageClassifier(LightningModule):
         if len(classes) <= 1 or not all(isinstance(el, str) for el in classes):
             raise ValueError("classes must be list of strings and its length must be greater than 1")
         self.feature_extractor = feature_extractor
+        self.head = head
+        self.loss_fn = loss_fn
         self.classes = classes
         self.num_classes = len(classes)
         self.lr = lr
@@ -30,8 +36,6 @@ class BaseImageClassifier(LightningModule):
         self.outputs = {split: [] for split in SPLITS}
         self.examples = {split: {} for split in SPLITS}
         self.logged_metrics = {}
-
-        metrics = self.get_classification_metrics(num_classes=self.num_classes, average="weighted")
 
         self.train_metrics = metrics.clone(prefix=f"train/")
         self.val_metrics = metrics.clone(prefix=f"val/")
@@ -41,14 +45,6 @@ class BaseImageClassifier(LightningModule):
             "val": self.val_metrics,
             "test": self.test_metrics,
         }
-
-        self.head = nn.Identity()
-        self.loss_fn = nn.Identity()
-
-    @classmethod
-    @abstractmethod
-    def get_classification_metrics(cls, num_classes: int, average: _metrics_average) -> MetricCollection:
-        raise NotImplementedError()
 
     @property
     def name(self):

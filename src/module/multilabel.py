@@ -15,13 +15,15 @@ class MultilabelImageClassifier(BaseImageClassifier):
         classes: list[str],
         lr: float = 1e-3,
     ):
-        super().__init__(feature_extractor=feature_extractor, classes=classes, lr=lr)
-        self.loss_fn = nn.BCELoss(reduction="none")
-        self.head = MultilabelClassificationHead(in_dim=feature_extractor.out_dim, n_classes=len(classes))
-
-    @classmethod
-    def get_classification_metrics(cls, num_classes: int, average: _metrics_average) -> MetricCollection:
-        return multilabel_classification_metrics(num_classes=num_classes, average=average)
+        num_classes = len(classes)
+        super().__init__(
+            feature_extractor=feature_extractor,
+            classes=classes,
+            lr=lr,
+            head=MultilabelClassificationHead(in_dim=feature_extractor.out_dim, num_classes=num_classes),
+            loss_fn=nn.BCELoss(reduction="none"),
+            metrics=multilabel_classification_metrics(num_classes=num_classes, average="weighted"),
+        )
 
     def _produce_outputs(
         self,
