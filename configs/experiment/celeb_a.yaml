@@ -4,7 +4,6 @@ defaults:
   - override /datamodule: celeb_a.yaml
   - override /feature_extractor: deep_cnn.yaml
   - override /callbacks: default.yaml
-  - override /trainer: default.yaml
   - override /model: multilabel_image_classifier.yaml
   - override /transforms:
       [
@@ -15,5 +14,5 @@ defaults:
       ]
 
 callbacks:
-  random_examples:
+  example_predictions:
     multilabel: True

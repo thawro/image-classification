@@ -1,5 +1,6 @@
 import hydra
 import torch
+import torch.backends.cudnn
 from omegaconf import DictConfig, OmegaConf
 from pytorch_lightning import seed_everything
 from pytorch_lightning.callbacks import ModelCheckpoint
@@ -13,6 +14,8 @@ from src.utils.hydra import (
     instantiate_trainer,
 )
 from src.utils.utils import close_loggers, print_config_tree
+
+torch.backends.cudnn.benchmark = True
 
 
 @hydra.main(version_base=None, config_path="../../configs", config_name="train")

@@ -17,13 +17,16 @@ class ExamplePredictionsLogger(pl.Callback):
         multilabel: bool = False,
         modes: list[Literal["random", "worst", "best"]] = ["random"],
     ):
+        super().__init__()
         self.num_examples = num_examples
         self.modes = modes
         self.multilabel = multilabel
         self.plot_fn = plot_imgs_preds_plotly if multilabel else plot_imgs_probs_plotly
-        super().__init__()
+        self.every_n_epochs = 5
 
     def on_validation_epoch_end(self, trainer: pl.Trainer, pl_module: BaseImageClassifier):
+        if pl_module.current_epoch % self.every_n_epochs != 0:
+            return
         if trainer.state.fn != "fit" or trainer.sanity_checking:
             return
         examples = pl_module.examples["val"]

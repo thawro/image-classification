@@ -1,4 +1,4 @@
-from typing import Any, Callable, Literal, Optional, Protocol, Self, Sequence
+from typing import Any, Callable, Literal, Optional, Protocol, Self, Sequence, TypedDict
 
 import numpy as np
 from numpy.typing import NDArray
@@ -23,3 +23,6 @@ class _StaticImageDataset(Protocol):
     targets: Tensor | _int_array
     classes: list[str]
     transform: Optional[Callable[[Image.Image], Tensor]]
+
+
+Outputs = dict[Literal["loss", "probs", "preds"], Tensor]

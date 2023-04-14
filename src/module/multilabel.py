@@ -5,7 +5,7 @@ from src.architectures.feature_extractors.base import FeatureExtractor
 from src.architectures.head import MultilabelClassificationHead
 from src.evaluation.metrics import multilabel_classification_metrics
 from src.module.base import BaseImageClassifier
-from src.utils.types import Tensor, TensorType, _metrics_average, _stage
+from src.utils.types import Outputs, Tensor, _metrics_average, _stage
 
 
 class MultilabelImageClassifier(BaseImageClassifier):
@@ -23,18 +23,12 @@ class MultilabelImageClassifier(BaseImageClassifier):
     def get_classification_metrics(cls, num_classes: int, average: _metrics_average) -> MetricCollection:
         return multilabel_classification_metrics(num_classes=num_classes, average=average)
 
-    def _common_step(
+    def _produce_outputs(
         self,
-        batch: TensorType["batch", "channels", "height", "width"],
-        batch_idx: int,
-        stage: _stage,
-    ) -> Tensor:
-        x, targets = batch
-        probs = self(x)
+        imgs: Tensor,
+        targets: Tensor,
+    ) -> Outputs:
+        probs = self(imgs)
         loss = self.loss_fn(probs, targets.float())
-        outputs = {"loss": loss, "probs": probs}
-        if stage != "train":
-            self.examples[stage] = {"data": x.cpu(), "targets": targets.cpu()}
-        self.metrics[stage].update(probs, targets)
-        self.outputs[stage].append(outputs)
-        return loss.mean()
+        preds = probs.argmax(dim=1)
+        return {"loss": loss, "probs": probs, "preds": preds}
