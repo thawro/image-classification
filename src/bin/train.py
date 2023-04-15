@@ -15,8 +15,6 @@ from src.utils.hydra import (
 )
 from src.utils.utils import close_loggers, print_config_tree
 
-torch.backends.cudnn.benchmark = True
-
 
 @hydra.main(version_base=None, config_path="../../configs", config_name="train")
 def main(cfg: DictConfig):

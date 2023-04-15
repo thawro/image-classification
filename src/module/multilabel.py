@@ -1,11 +1,10 @@
 from torch import nn
-from torchmetrics import MetricCollection
 
 from src.architectures.feature_extractors.base import FeatureExtractor
 from src.architectures.head import MultilabelClassificationHead
 from src.evaluation.metrics import multilabel_classification_metrics
 from src.module.base import BaseImageClassifier
-from src.utils.types import Outputs, Tensor, _metrics_average, _stage
+from src.utils.types import Outputs, Tensor
 
 
 class MultilabelImageClassifier(BaseImageClassifier):
@@ -20,6 +19,7 @@ class MultilabelImageClassifier(BaseImageClassifier):
             feature_extractor=feature_extractor,
             classes=classes,
             lr=lr,
+            task="multilabel",
             head=MultilabelClassificationHead(in_dim=feature_extractor.out_dim, num_classes=num_classes),
             loss_fn=nn.BCELoss(reduction="none"),
             metrics=multilabel_classification_metrics(num_classes=num_classes, average="weighted"),
@@ -27,10 +27,10 @@ class MultilabelImageClassifier(BaseImageClassifier):
 
     def _produce_outputs(
         self,
-        imgs: Tensor,
+        images: Tensor,
         targets: Tensor,
     ) -> Outputs:
-        probs = self(imgs)
+        probs = self(images)
         loss = self.loss_fn(probs, targets.float())
         preds = probs.argmax(dim=1)
         return {"loss": loss, "probs": probs, "preds": preds}

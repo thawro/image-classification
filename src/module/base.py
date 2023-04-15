@@ -9,8 +9,9 @@ from torchtyping import TensorType
 import wandb
 from src.architectures.feature_extractors.base import FeatureExtractor
 from src.architectures.head import ClassificationHead
+from src.evaluation.visualizers import ClassificationVisualizer
 from src.utils.namespace import SPLITS
-from src.utils.types import Outputs, Tensor, _metrics_average, _stage
+from src.utils.types import Outputs, Tensor, _stage, _task
 
 
 class BaseImageClassifier(LightningModule):
@@ -18,6 +19,7 @@ class BaseImageClassifier(LightningModule):
         self,
         feature_extractor: FeatureExtractor,
         head: ClassificationHead,
+        task: _task,
         loss_fn: nn.Module,
         metrics: MetricCollection,
         classes: list[str],
@@ -27,9 +29,11 @@ class BaseImageClassifier(LightningModule):
         if len(classes) <= 1 or not all(isinstance(el, str) for el in classes):
             raise ValueError("classes must be list of strings and its length must be greater than 1")
         self.feature_extractor = feature_extractor
+        self.task = task
         self.head = head
         self.loss_fn = loss_fn
         self.classes = classes
+        self.visualizer = ClassificationVisualizer(task=task, backend="plotly")
         self.num_classes = len(classes)
         self.lr = lr
         self.save_hyperparameters(ignore=["feature_extractor", "head"])
@@ -55,7 +59,7 @@ class BaseImageClassifier(LightningModule):
         return self.head(features)
 
     @abstractmethod
-    def _produce_outputs(self, imgs: Tensor, targets: Tensor) -> Outputs:
+    def _produce_outputs(self, images: Tensor, targets: Tensor) -> Outputs:
         pass
 
     def _common_step(
@@ -64,10 +68,11 @@ class BaseImageClassifier(LightningModule):
         batch_idx: int,
         stage: _stage,
     ) -> Tensor:
-        imgs, targets = batch
-        outputs = self._produce_outputs(imgs, targets)
+        images, targets = batch
+        outputs = self._produce_outputs(images, targets)
+        outputs["targets"] = targets
         if stage != "train" and batch_idx == 0:
-            examples = {"data": imgs, "targets": targets} | outputs
+            examples = {"images": images, "targets": targets} | outputs
             self.examples[stage] = {k: v.cpu() for k, v in examples.items()}
             del examples
         self.metrics[stage].update(outputs["probs"], targets)

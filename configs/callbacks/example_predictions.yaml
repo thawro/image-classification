@@ -1,5 +1,4 @@
 example_predictions:
   _target_: src.evaluation.callbacks.ExamplePredictionsLogger
   num_examples: 6
-  multilabel: False
   modes: [worst, best]

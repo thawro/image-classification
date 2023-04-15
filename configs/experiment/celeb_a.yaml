@@ -12,7 +12,3 @@ defaults:
         random_horizontal_flip.yaml,
         random_rotation.yaml,
       ]
-
-callbacks:
-  example_predictions:
-    multilabel: True
