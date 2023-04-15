@@ -3,9 +3,10 @@ from pathlib import Path
 import rich
 import rich.syntax
 import rich.tree
-import wandb
 from omegaconf import DictConfig, OmegaConf
+from pytorch_lightning.accelerators.cuda import CUDAAccelerator
 
+import wandb
 from src.utils.pylogger import get_pylogger
 
 log = get_pylogger(__name__)
@@ -37,3 +38,6 @@ def close_loggers() -> None:
     if wandb.run:
         log.info("Closing wandb!")
         wandb.finish()
+
+
+get_device = lambda accelerator: "cuda" if isinstance(accelerator, CUDAAccelerator) else "cpu"

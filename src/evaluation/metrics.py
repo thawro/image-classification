@@ -1,11 +1,31 @@
-from sklearn.metrics import accuracy_score, f1_score
+from torchmetrics import MetricCollection
+from torchmetrics.classification import (
+    MulticlassAccuracy,
+    MulticlassAUROC,
+    MulticlassF1Score,
+    MultilabelAccuracy,
+    MultilabelAUROC,
+    MultilabelF1Score,
+)
 
-from src.utils.types import Tensor, _int_array, _int_list
-
-_y_type = Tensor | _int_array | _int_list
+from src.utils.types import _metrics_average
 
 
-def get_classification_metrics(y_true: _y_type, y_pred: _y_type) -> dict[str, float]:
-    acc = float(accuracy_score(y_true, y_pred))
-    fscore = float(f1_score(y_true, y_pred, average="macro"))
-    return {"accuracy": acc, "fscore": fscore}
+def multiclass_classification_metrics(num_classes: int, average: _metrics_average = "weighted") -> MetricCollection:
+    return MetricCollection(
+        {
+            "fscore": MulticlassF1Score(num_classes=num_classes, average=average),
+            "accuracy": MulticlassAccuracy(num_classes=num_classes, average=average),
+            "auroc": MulticlassAUROC(num_classes=num_classes, average=average),
+        }
+    )
+
+
+def multilabel_classification_metrics(num_classes: int, average: _metrics_average = "weighted") -> MetricCollection:
+    return MetricCollection(
+        {
+            "accuracy": MultilabelAccuracy(num_labels=num_classes, average=average),
+            "fscore": MultilabelF1Score(num_labels=num_classes, average=average),
+            "auroc": MultilabelAUROC(num_labels=num_classes, average=average),
+        }
+    )

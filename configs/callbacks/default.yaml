@@ -2,7 +2,6 @@ defaults:
   - model_checkpoint.yaml
   - rich_progress_bar.yaml
   - early_stopping.yaml
-  - random_examples.yaml
-  - worst_examples.yaml
-  - best_examples.yaml
+  - example_predictions.yaml
+  - confusion_matrix.yaml
   - _self_

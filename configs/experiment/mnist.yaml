@@ -3,6 +3,7 @@
 defaults:
   - override /datamodule: mnist.yaml
   - override /feature_extractor: mlp.yaml
+  - override /model: multiclass_image_classifier.yaml
   - override /transforms:
       [
         to_tensor.yaml,

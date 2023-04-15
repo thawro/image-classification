@@ -13,8 +13,6 @@ from torch.nn import Flatten, Identity
 from torchvision.transforms import RandomHorizontalFlip, RandomRotation, ToTensor
 
 from src.architectures.feature_extractors import base, cnn, mlp, resnet
-from src.architectures.head import ClassificationHead
-from src.architectures.model import ImageClassifier
 from src.data.datamodule import (
     CelebADataModule,
     CIFAR10DataModule,
@@ -27,8 +25,9 @@ from src.data.datamodule import (
 )
 from src.data.dataset import StaticImageDataset
 from src.data.transforms import ImgNormalize, Permute
-from src.evaluation.callbacks import ExamplePredictionsLogger
+from src.evaluation.callbacks import ConfusionMatrixLogger, ExamplePredictionsLogger
 from src.loggers.wandb import WandbLoggerWrapper
+from src.module import MulticlassImageClassifier, MultilabelImageClassifier
 from src.tests.utils import CONFIG_NAME, CONFIGS_PATH, create_hydra_config
 from src.utils.hydra import instantiate_feature_extractor
 from src.utils.types import Callable
@@ -38,11 +37,10 @@ from src.utils.types import Callable
     "cfg_path, expected",
     [
         ["model_checkpoint.yaml", [ModelCheckpoint]],
-        ["best_examples.yaml", [ExamplePredictionsLogger]],
-        ["random_examples.yaml", [ExamplePredictionsLogger]],
-        ["worst_examples.yaml", [ExamplePredictionsLogger]],
+        ["example_predictions.yaml", [ExamplePredictionsLogger]],
         ["early_stopping.yaml", [EarlyStopping]],
         ["rich_progress_bar.yaml", [RichProgressBar]],
+        ["confusion_matrix.yaml", [ConfusionMatrixLogger]],
         [
             "default.yaml",
             [
@@ -50,8 +48,7 @@ from src.utils.types import Callable
                 RichProgressBar,
                 EarlyStopping,
                 ExamplePredictionsLogger,
-                ExamplePredictionsLogger,
-                ExamplePredictionsLogger,
+                ConfusionMatrixLogger,
             ],
         ],
     ],
@@ -97,7 +94,7 @@ def test_datamodule(
             config_name=CONFIG_NAME,
             output_path=tmp_path,
         )
-        datamodule = hydra.utils.instantiate(cfg.datamodule)
+        datamodule = hydra.utils.instantiate(cfg.datamodule)(train_transform=None, inference_transform=None)
         assert isinstance(datamodule, expected)
 
 
@@ -129,28 +126,6 @@ def test_feature_extractor(
 @pytest.mark.parametrize(
     "cfg_path, expected",
     [
-        ["default.yaml", ClassificationHead],
-    ],
-)
-def test_head(
-    cfg_path: str,
-    expected: ClassificationHead,
-    tmp_path,
-) -> None:
-    with hydra.initialize(version_base=None, config_path=str(CONFIGS_PATH)):
-        cfg = create_hydra_config(
-            experiment_name=None,
-            overrided_cfgs={"head": [cfg_path]},
-            config_name=CONFIG_NAME,
-            output_path=tmp_path,
-        )
-        head = hydra.utils.instantiate(cfg.head)
-        assert isinstance(head, expected)
-
-
-@pytest.mark.parametrize(
-    "cfg_path, expected",
-    [
         ["wandb.yaml", WandbLoggerWrapper],
     ],
 )
@@ -174,7 +149,8 @@ def test_logger(
 @pytest.mark.parametrize(
     "cfg_path, expected",
     [
-        ["default.yaml", ImageClassifier],
+        ["multiclass_image_classifier.yaml", MulticlassImageClassifier],
+        ["multilabel_image_classifier.yaml", MultilabelImageClassifier],
     ],
 )
 def test_model(
@@ -189,7 +165,8 @@ def test_model(
             config_name=CONFIG_NAME,
             output_path=tmp_path,
         )
-        model = hydra.utils.instantiate(cfg.model)(feature_extractor=nn.Identity(), head=nn.Identity(), classes=[])
+        feature_extractor = mlp.MLP(in_dim=128, hidden_dims=[128])
+        model = hydra.utils.instantiate(cfg.model)(feature_extractor=feature_extractor, classes=["cat", "dog"])
         assert isinstance(model, expected)
 
 

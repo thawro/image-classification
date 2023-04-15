@@ -46,3 +46,7 @@ class ImgUnNormalize(UnNormalize):
         else:
             mean, std = MEAN_IMAGENET, STD_IMAGENET
         super().__init__(mean=mean, std=std)
+
+
+imagenet_unnormalizer = ImgUnNormalize(n_channels=3)
+mnist_unnormalizer = ImgUnNormalize(n_channels=1)

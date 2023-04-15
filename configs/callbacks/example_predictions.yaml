@@ -1,4 +1,4 @@
-best_examples:
+example_predictions:
   _target_: src.evaluation.callbacks.ExamplePredictionsLogger
   num_examples: 6
-  mode: best
+  modes: [worst, best]

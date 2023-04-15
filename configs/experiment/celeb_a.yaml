@@ -1,9 +1,10 @@
 # @package _global_
 
 defaults:
-  - override /datamodule: cifar10.yaml
-  - override /feature_extractor: mlp.yaml
-  - override /model: multiclass_image_classifier.yaml
+  - override /datamodule: celeb_a.yaml
+  - override /feature_extractor: deep_cnn.yaml
+  - override /callbacks: default.yaml
+  - override /model: multilabel_image_classifier.yaml
   - override /transforms:
       [
         to_tensor.yaml,

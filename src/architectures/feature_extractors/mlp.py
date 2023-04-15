@@ -52,7 +52,7 @@ class MLP(FeatureExtractor):
         self,
         in_dim: int,
         hidden_dims: list[int],
-        use_batch_norm: bool,
+        use_batch_norm: bool = True,
         dropout: float = 0,
         activation: str = "ReLU",
     ):
@@ -65,6 +65,8 @@ class MLP(FeatureExtractor):
             activation (str, optional): Type of activation function used before BN. Defaults to 0.
         """
         super().__init__()
+        if len(hidden_dims) == 0:
+            raise ValueError("hidden_dims must have atleast one element")
         self.hidden_dims = hidden_dims
         in_dims = [in_dim] + hidden_dims[:-1]
         n_layers = len(hidden_dims)

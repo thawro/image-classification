@@ -7,10 +7,9 @@ defaults:
   - feature_extractor: mlp.yaml
   - transforms: default.yaml
   - callbacks: default.yaml
-  - head: classification_head.yaml
   - hydra: default.yaml
   - logger: wandb.yaml
-  - model: image_classifier.yaml
+  - model: multiclass_image_classifier.yaml
   - paths: default.yaml
   - trainer: default.yaml
   - experiment: null

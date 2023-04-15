@@ -3,8 +3,8 @@ import torch
 from omegaconf import DictConfig
 from pytorch_lightning import Trainer, seed_everything
 
-from src.architectures.model import ImageClassifier
 from src.data.datamodule import ImageDataModule
+from src.module.base import BaseImageClassifier
 from src.utils.hydra import (
     instantiate_datamodule,
     instantiate_logger,
@@ -16,7 +16,7 @@ from src.utils.utils import close_loggers, log, print_config_tree
 
 def evaluate(
     trainer: Trainer,
-    model: ImageClassifier,
+    model: BaseImageClassifier,
     datamodule: ImageDataModule,
     ckpt_path: str,
 ):

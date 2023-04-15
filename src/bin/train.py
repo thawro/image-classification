@@ -1,5 +1,6 @@
 import hydra
 import torch
+import torch.backends.cudnn
 from omegaconf import DictConfig, OmegaConf
 from pytorch_lightning import seed_everything
 from pytorch_lightning.callbacks import ModelCheckpoint

@@ -1,4 +1,0 @@
-worst_examples:
-  _target_: src.evaluation.callbacks.ExamplePredictionsLogger
-  num_examples: 6
-  mode: worst
