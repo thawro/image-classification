@@ -25,7 +25,7 @@ from src.data.datamodule import (
 )
 from src.data.dataset import StaticImageDataset
 from src.data.transforms import ImgNormalize, Permute
-from src.evaluation.callbacks import ExamplePredictionsLogger
+from src.evaluation.callbacks import ConfusionMatrixLogger, ExamplePredictionsLogger
 from src.loggers.wandb import WandbLoggerWrapper
 from src.module import MulticlassImageClassifier, MultilabelImageClassifier
 from src.tests.utils import CONFIG_NAME, CONFIGS_PATH, create_hydra_config
@@ -40,6 +40,7 @@ from src.utils.types import Callable
         ["example_predictions.yaml", [ExamplePredictionsLogger]],
         ["early_stopping.yaml", [EarlyStopping]],
         ["rich_progress_bar.yaml", [RichProgressBar]],
+        ["confusion_matrix.yaml", [ConfusionMatrixLogger]],
         [
             "default.yaml",
             [
@@ -47,6 +48,7 @@ from src.utils.types import Callable
                 RichProgressBar,
                 EarlyStopping,
                 ExamplePredictionsLogger,
+                ConfusionMatrixLogger,
             ],
         ],
     ],
