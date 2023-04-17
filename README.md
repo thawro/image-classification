@@ -61,10 +61,10 @@
     - [ ] [COCO](https://pytorch.org/vision/main/generated/torchvision.datasets.CocoDetection)
     - [ ] [Pascal VOC](https://pytorch.org/vision/main/generated/torchvision.datasets.VOCDetection)
 - [ ] Training and evaluation
-    - [ ] [wandb](https://wandb.ai/) Logging
-        [x] Metrics
-        [x] Visualizations
-        [ ] Model checkpoints + onnx
+    - [ ] Logging
+        - [x] Metrics
+        - [x] Visualizations
+        - [ ] Model checkpoints + onnx
     - [ ] Training resuming
 - [x] Classification (multiclass and multilabel)
     - [x] PytorchLightning compatible API (data and models)
