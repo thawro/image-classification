@@ -32,12 +32,12 @@ def instantiate_datamodule(cfg: DictConfig) -> ImageDataModule:
 def instantiate_feature_extractor(cfg: DictConfig, dummy_input_shape: torch.Size) -> FeatureExtractor:
     log.info("Instantiating Feature Extractor..")
     class_name = cfg.feature_extractor._target_.split(".")[-1]
-    if any([name in class_name.lower() for name in ["resnet", "cnn"]]):  # ResNet, DeepCNN
-        in_channels = dummy_input_shape[0]
-        feature_extractor = instantiate(cfg.feature_extractor)(in_channels=in_channels)
-    else:  # MLP
+    if "mlp" in class_name.lower():  # MLP
         in_dim = dummy_input_shape.numel()
         feature_extractor = instantiate(cfg.feature_extractor)(in_dim=in_dim)
+    else:  # ResNet, DeepCNN, SqueezeNet
+        in_channels = dummy_input_shape[0]
+        feature_extractor = instantiate(cfg.feature_extractor)(in_channels=in_channels)
     return feature_extractor
 
 

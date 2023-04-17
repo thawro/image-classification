@@ -25,8 +25,8 @@ def main(cfg: DictConfig):
     model = instantiate_model(cfg, datamodule=datamodule)
     if cfg.run_name == "auto":
         cfg.run_name = model.name
-    logger = instantiate_logger(cfg)
     callbacks = instantiate_callbacks(cfg)
+    logger = instantiate_logger(cfg)
     trainer = instantiate_trainer(cfg, logger=logger, callbacks=list(callbacks.values()))
     params = {"dataset": datamodule.name, "model": model.name} | model.feature_extractor.params
     logger.log_hyperparams(params)

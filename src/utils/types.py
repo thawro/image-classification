@@ -30,3 +30,4 @@ class _StaticImageDataset(Protocol):
 
 Outputs = dict[Literal["loss", "probs", "preds", "targets"], Tensor]
 _Figure = plotly.graph_objects.Figure | matplotlib.figure.Figure
+HeadType = Literal["linear", "convolutional"]
