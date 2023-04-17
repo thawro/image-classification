@@ -1,3 +1,4 @@
 _target_: src.module.multiclass.MulticlassImageClassifier
 _partial_: True # feature_extractor, head and classes must be set
 lr: 0.001
+head_type: convolutional
