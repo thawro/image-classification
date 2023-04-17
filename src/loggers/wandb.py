@@ -36,5 +36,8 @@ class WandbLoggerWrapper(BaseLogger, WandbLogger):
         log.info(f"Saving artifact {path} to wandb run {self.run_name} from project {self.project_name}")
         wandb.save(path, base_path=self.output_dir)
 
+    def log(self, items: dict):
+        self.experiment.log(items)
+
     def log_model(self, model: LightningModule, dummy_input: Tensor):
         raise NotImplementedError()

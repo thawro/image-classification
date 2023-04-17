@@ -1,13 +1,13 @@
 import torch
 from hydra.utils import instantiate
-from omegaconf import DictConfig
+from omegaconf import DictConfig, OmegaConf
 from pytorch_lightning import Callback, Trainer
 from torchvision.transforms import Compose
 
 from src.architectures.feature_extractors.base import FeatureExtractor
 from src.architectures.head import ClassificationHead
 from src.data.datamodule import ImageDataModule
-from src.loggers.base import BaseLogger
+from src.loggers.wandb import WandbLoggerWrapper
 from src.module.base import BaseImageClassifier
 from src.utils.utils import log
 
@@ -55,9 +55,11 @@ def instantiate_model(cfg: DictConfig, datamodule: ImageDataModule) -> BaseImage
     return instantiate(cfg.model)(feature_extractor=feature_extractor, classes=datamodule.classes)
 
 
-def instantiate_logger(cfg: DictConfig) -> BaseLogger:
+def instantiate_logger(cfg: DictConfig) -> WandbLoggerWrapper:
     log.info("Instantiating Logger..")
-    return instantiate(cfg.logger)
+    logger: WandbLoggerWrapper = instantiate(cfg.logger)
+    logger.log_config(OmegaConf.to_object(cfg))
+    return logger
 
 
 def instantiate_callbacks(cfg: DictConfig) -> dict[str, Callback]:
@@ -65,6 +67,6 @@ def instantiate_callbacks(cfg: DictConfig) -> dict[str, Callback]:
     return {name: instantiate(cbk_cfg) for name, cbk_cfg in cfg.callbacks.items()}
 
 
-def instantiate_trainer(cfg: DictConfig, logger: BaseLogger, callbacks: list[Callback], **kwargs) -> Trainer:
+def instantiate_trainer(cfg: DictConfig, logger: WandbLoggerWrapper, callbacks: list[Callback], **kwargs) -> Trainer:
     log.info("Instantiating Trainer..")
     return instantiate(cfg.trainer, logger=logger, callbacks=callbacks, **kwargs)
