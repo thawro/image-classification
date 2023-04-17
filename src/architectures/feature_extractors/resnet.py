@@ -6,7 +6,7 @@ from typing import Literal
 from torch import nn
 from torchtyping import TensorType
 
-from src.utils.types import _size_2_t
+from src.utils.types import Any, _size_2_t
 
 from .base import FeatureExtractor
 
@@ -247,6 +247,8 @@ class ResNet(FeatureExtractor):
         """
         super().__init__()
         self.stem_channels = stem_channels
+        self.stem_kernel_size = stem_kernel_size
+        self.pool_kernel_size = pool_kernel_size
         self.block_type = block_type
         self.stages_n_blocks = stages_n_blocks
         ResnetCoreBlocks = BasicResNetCore if block_type == "basic" else BottleneckResNetCore
@@ -267,6 +269,16 @@ class ResNet(FeatureExtractor):
                 ]
             )
         )
+
+    @property
+    def params(self) -> dict[str, Any]:
+        return {
+            "stem_channels": self.stem_channels,
+            "stem_kernel_size": self.stem_kernel_size,
+            "pool_kernel_size": self.pool_kernel_size,
+            "block_type": self.block_type,
+            "stages_n_blocks": self.stages_n_blocks,
+        }
 
     @property
     def out_dim(self) -> int:

@@ -3,7 +3,7 @@ from typing import Literal
 from torch import nn
 from torchtyping import TensorType
 
-from src.utils.types import _size_2_t, _size_2_t_list
+from src.utils.types import Any, _size_2_t, _size_2_t_list
 
 from .base import FeatureExtractor
 
@@ -102,6 +102,12 @@ class DeepCNN(FeatureExtractor):
         """
         super().__init__()
         self.out_channels = out_channels
+        self.kernels = kernels
+        self.pool_kernels = pool_kernels
+        self.pool_type = pool_type
+        self.use_batch_norm = use_batch_norm
+        self.dropout = dropout
+        self.activation = activation
         n_blocks = len(out_channels)
         fixed_params = dict(
             pool_type=pool_type,
@@ -124,6 +130,18 @@ class DeepCNN(FeatureExtractor):
             for i in range(n_blocks)
         ] + [nn.AdaptiveAvgPool2d((1, 1)), nn.Flatten()]
         self.net = nn.Sequential(*layers)
+
+    @property
+    def params(self) -> dict[str, Any]:
+        return {
+            "out_channels": self.out_channels,
+            "kernels": self.kernels,
+            "pool_kernels": self.pool_kernels,
+            "pool_type": self.pool_type,
+            "batch_norm": self.use_batch_norm,
+            "dropout": self.dropout,
+            "activation": self.activation,
+        }
 
     @property
     def out_dim(self) -> int:
