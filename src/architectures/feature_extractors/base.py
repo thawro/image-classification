@@ -3,13 +3,13 @@ from abc import abstractmethod
 from torch import nn
 from torchtyping import TensorType
 
-from src.utils.types import Any
+from src.utils.types import Any, Optional
 
 
 class FeatureExtractor(nn.Module):
-    def __init__(self):
+    def __init__(self, net: nn.Module):
         super().__init__()
-        self.net = nn.Identity()
+        self.net = net
 
     def forward(self, x: TensorType["batch", "channels", "height", "width"]) -> TensorType["batch", "out_dim"]:
         return self.net(x)

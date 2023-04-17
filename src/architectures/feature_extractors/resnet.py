@@ -245,14 +245,13 @@ class ResNet(FeatureExtractor):
             block_type (Literal["basic", "bottleneck"], optional): Whether to use Basic block or Bottleneck block.
                 Defaults to "basic".
         """
-        super().__init__()
         self.stem_channels = stem_channels
         self.stem_kernel_size = stem_kernel_size
         self.pool_kernel_size = pool_kernel_size
         self.block_type = block_type
         self.stages_n_blocks = stages_n_blocks
         ResnetCoreBlocks = BasicResNetCore if block_type == "basic" else BottleneckResNetCore
-        self.net = nn.Sequential(
+        net = nn.Sequential(
             OrderedDict(
                 [
                     (
@@ -264,11 +263,10 @@ class ResNet(FeatureExtractor):
                         "residual_layers",
                         ResnetCoreBlocks(in_channels=stem_channels, stages_n_blocks=stages_n_blocks),
                     ),
-                    ("global_pool", nn.AdaptiveAvgPool2d((1, 1))),
-                    ("flatten", nn.Flatten()),
                 ]
             )
         )
+        super().__init__(net)
 
     @property
     def params(self) -> dict[str, Any]:

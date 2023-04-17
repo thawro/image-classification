@@ -24,7 +24,6 @@ class MLP(FeatureExtractor):
             dropout (float, optional): Dropout probability (used after BN). Defaults to 0.
             activation (str, optional): Type of activation function used before BN. Defaults to 0.
         """
-        super().__init__()
         if len(hidden_dims) == 0:
             raise ValueError("hidden_dims must have atleast one element")
         self.hidden_dims = hidden_dims
@@ -40,7 +39,8 @@ class MLP(FeatureExtractor):
                 for i in range(n_layers)
             ],
         ]
-        self.net = nn.Sequential(*layers)
+        net = nn.Sequential(*layers)
+        super().__init__(net)
 
     @property
     def params(self) -> dict[str, Any]:

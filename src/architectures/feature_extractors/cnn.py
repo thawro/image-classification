@@ -2,10 +2,9 @@ from typing import Literal
 
 from torch import nn
 
+from src.architectures.feature_extractors.base import FeatureExtractor
 from src.architectures.helpers import CNNBlock
 from src.utils.types import Any, _size_2_t_list
-
-from .base import FeatureExtractor
 
 
 class DeepCNN(FeatureExtractor):
@@ -35,7 +34,6 @@ class DeepCNN(FeatureExtractor):
             dropout (float, optional): Dropout probability used in CNN blocks. Defaults to 0.
             activation (str, optional): Type of activation function used in CNN blocks. Defaults to 0.
         """
-        super().__init__()
         self.out_channels = out_channels
         self.kernels = kernels
         self.pool_kernels = pool_kernels
@@ -63,8 +61,9 @@ class DeepCNN(FeatureExtractor):
                 **fixed_params,
             )
             for i in range(n_blocks)
-        ] + [nn.AdaptiveAvgPool2d((1, 1)), nn.Flatten()]
-        self.net = nn.Sequential(*layers)
+        ]
+        net = nn.Sequential(*layers)
+        super().__init__(net)
 
     @property
     def params(self) -> dict[str, Any]:
