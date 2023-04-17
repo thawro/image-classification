@@ -1,7 +1,7 @@
 import hydra
 import torch
 import torch.backends.cudnn
-from omegaconf import DictConfig, OmegaConf
+from omegaconf import DictConfig
 from pytorch_lightning import seed_everything
 from pytorch_lightning.callbacks import ModelCheckpoint
 
@@ -24,12 +24,11 @@ def main(cfg: DictConfig):
     datamodule = instantiate_datamodule(cfg)
     model = instantiate_model(cfg, datamodule=datamodule)
     if cfg.run_name == "auto":
-        cfg.run_name = f"{model.name}"
+        cfg.run_name = model.name
     logger = instantiate_logger(cfg)
-    logger.log_config(OmegaConf.to_object(cfg))
     callbacks = instantiate_callbacks(cfg)
     trainer = instantiate_trainer(cfg, logger=logger, callbacks=list(callbacks.values()))
-    params = {"dataset": datamodule.name, "model": model.feature_extractor.name}
+    params = {"dataset": datamodule.name, "model": model.name} | model.feature_extractor.params
     logger.log_hyperparams(params)
     trainer.fit(model, datamodule=datamodule)
 

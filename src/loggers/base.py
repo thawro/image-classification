@@ -5,6 +5,7 @@ import yaml
 from pytorch_lightning import LightningModule
 
 from src.utils.types import Any, Tensor
+from src.utils.utils import log
 
 
 class BaseLogger:
@@ -17,6 +18,7 @@ class BaseLogger:
     @abstractmethod
     def log_config(self, cfg: dict):
         path = f"{self.output_dir}/hydra_config.yaml"
+        log.info("Logging config file (hydra_config.yaml)..")
         with open(str(path), "w") as yaml_file:
             yaml.dump(cfg, yaml_file, default_flow_style=False)
         self.log_artifact(path)
