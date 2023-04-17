@@ -1,0 +1,7 @@
+_target_: src.architectures.feature_extractors.squeeze_net.SqueezeNet
+_partial_: True # in_channels must be set
+base_e: 128
+incr_e: 128
+pct_3x3: 0.5
+freq: 2
+SR: 0.125
