@@ -51,9 +51,9 @@
 
 - [ ] Training and evaluation
     - [ ] Logging
-        [x] Metrics
-        [x] Visualizations
-        [ ] Model checkpoints + onnx
+        - [x] Metrics
+        - [x] Visualizations
+        - [ ] Model checkpoints + onnx
     - [ ] Training resuming
 - [x] Classification (multiclass and multilabel)
     - [x] PytorchLightning compatible API (data and models)
