@@ -1,5 +1,5 @@
 _target_: src.data.datamodule.CIFAR100DataModule
 _partial_: True # transforms must be set
 data_dir: ./data
-batch_size: 256
+batch_size: 512
 seed: ${seed}

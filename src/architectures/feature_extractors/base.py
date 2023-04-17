@@ -3,6 +3,8 @@ from abc import abstractmethod
 from torch import nn
 from torchtyping import TensorType
 
+from src.utils.types import Any
+
 
 class FeatureExtractor(nn.Module):
     def __init__(self):
@@ -18,5 +20,10 @@ class FeatureExtractor(nn.Module):
 
     @property
     @abstractmethod
+    def params(self) -> dict[str, Any]:
+        raise NotImplementedError()
+
+    @property
+    @abstractmethod
     def out_dim(self) -> int:
-        pass
+        raise NotImplementedError()

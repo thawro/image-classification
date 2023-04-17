@@ -2,4 +2,7 @@ _target_: src.architectures.feature_extractors.cnn.DeepCNN
 _partial_: True # in_channels must be set
 out_channels: [16, 32, 64]
 kernels: [3, 3, 3]
-pool_kernels: [2, 1, 2]
+pool_kernels: 2
+use_batch_norm: True
+dropout: 0
+activation: ReLU

@@ -3,4 +3,4 @@ early_stopping:
   monitor: val/loss
   mode: min
   min_delta: 0
-  patience: 20
+  patience: 10

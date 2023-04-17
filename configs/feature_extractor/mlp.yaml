@@ -3,3 +3,4 @@ _partial_: True # in_dim must be set
 hidden_dims: [512, 256, 128]
 use_batch_norm: True
 dropout: 0
+activation: ReLU

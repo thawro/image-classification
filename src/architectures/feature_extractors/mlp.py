@@ -1,6 +1,8 @@
 from torch import nn
 from torchtyping import TensorType
 
+from src.utils.types import Any
+
 from .base import FeatureExtractor
 
 
@@ -68,6 +70,9 @@ class MLP(FeatureExtractor):
         if len(hidden_dims) == 0:
             raise ValueError("hidden_dims must have atleast one element")
         self.hidden_dims = hidden_dims
+        self.use_batch_norm = use_batch_norm
+        self.dropout = dropout
+        self.activation = activation
         in_dims = [in_dim] + hidden_dims[:-1]
         n_layers = len(hidden_dims)
         layers: list[nn.Module] = [
@@ -78,6 +83,15 @@ class MLP(FeatureExtractor):
             ],
         ]
         self.net = nn.Sequential(*layers)
+
+    @property
+    def params(self) -> dict[str, Any]:
+        return {
+            "activation": self.activation,
+            "hidden_dims": self.hidden_dims,
+            "dropout": self.dropout,
+            "batch_norm": self.use_batch_norm,
+        }
 
     @property
     def out_dim(self) -> int:
