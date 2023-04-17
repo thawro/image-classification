@@ -14,11 +14,12 @@ class ExamplePredictionsLogger(pl.Callback):
         self,
         num_examples: int = 8,
         modes: list[Literal["random", "worst", "best"]] = ["random"],
+        every_n_epochs: int = 10,
     ):
         super().__init__()
         self.num_examples = num_examples
         self.modes = modes
-        self.every_n_epochs = 5
+        self.every_n_epochs = every_n_epochs
 
     def on_validation_epoch_end(self, trainer: pl.Trainer, pl_module: BaseImageClassifier):
         if pl_module.current_epoch % self.every_n_epochs != 0:
@@ -50,9 +51,12 @@ class ExamplePredictionsLogger(pl.Callback):
 
 
 class ConfusionMatrixLogger(pl.Callback):
-    def __init__(self):
+    def __init__(
+        self,
+        every_n_epochs: int = 10,
+    ):
         super().__init__()
-        self.every_n_epochs = 5
+        self.every_n_epochs = every_n_epochs
 
     def on_validation_epoch_end(self, trainer: pl.Trainer, pl_module: BaseImageClassifier):
         if pl_module.current_epoch % self.every_n_epochs != 0:
