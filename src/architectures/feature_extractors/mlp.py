@@ -1,50 +1,8 @@
 from torch import nn
-from torchtyping import TensorType
 
+from src.architectures.feature_extractors.base import FeatureExtractor
+from src.architectures.helpers import FeedForwardBlock
 from src.utils.types import Any
-
-from .base import FeatureExtractor
-
-
-class FeedForwardBlock(nn.Module):
-    """Single FeedForward block constructed of combination of Linear, Activation, Batch Normalization and Dropout."""
-
-    def __init__(
-        self,
-        in_dim: int,
-        out_dim: int,
-        use_batch_norm: bool = True,
-        dropout: float = 0,
-        activation: str = "ReLU",
-    ):
-        """
-        Args:
-            in_dim (int): Input dimension of `torch.nn.Linear` layer.
-            out_dim (int): Output dimension of `torch.nn.Linear` layer.
-            use_batch_norm (bool, optional): Whether to use Batch Normalization (BN) after activation. Defaults to True.
-            dropout (float, optional): Dropout probability (used after BN). Defaults to 0.
-            activation (str, optional): Type of activation function used before BN. Defaults to 0.
-        """
-        super().__init__()
-        self.use_batch_norm = use_batch_norm
-        self.use_dropout = dropout > 0
-
-        self.linear = nn.Linear(in_dim, out_dim)
-        self.activation = getattr(nn, activation)()
-        if self.use_batch_norm:
-            self.batch_norm = nn.BatchNorm1d(out_dim)
-
-        if self.use_dropout:
-            self.dropout = nn.Dropout(dropout)
-
-    def forward(self, x: TensorType["batch", "in_dim"]) -> TensorType["batch", "out_dim"]:
-        out = self.linear(x)
-        out = self.activation(out)
-        if self.use_batch_norm:
-            out = self.batch_norm(out)
-        if self.use_dropout:
-            out = self.dropout(out)
-        return out
 
 
 class MLP(FeatureExtractor):

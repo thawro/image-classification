@@ -1,4 +1,5 @@
-# Basic Image Classification Models Comparison
+# Deep Learning models for image analysis
+
 
 ## Available Datasets:
 * MNIST
@@ -49,8 +50,18 @@
 
 # TODO
 
+- [ ] Datasets
+    - [x] MNIST
+    - [x] EMNSIT
+    - [x] FashionMNIST
+    - [x] CIFAR10
+    - [x] CIFAR100
+    - [x] SVHN
+    - [x] CelebA
+    - [ ] [COCO](https://pytorch.org/vision/main/generated/torchvision.datasets.CocoDetection)
+    - [ ] [Pascal VOC](https://pytorch.org/vision/main/generated/torchvision.datasets.VOCDetection)
 - [ ] Training and evaluation
-    - [ ] Logging
+    - [ ] [wandb](https://wandb.ai/) Logging
         [x] Metrics
         [x] Visualizations
         [ ] Model checkpoints + onnx
@@ -59,14 +70,17 @@
     - [x] PytorchLightning compatible API (data and models)
     - [x] Visualizations
 - [ ] Object detection
-- [ ] Segmentation
+- [ ] Image Segmentation
+- [ ] Image Generation
 - [ ] Architectures
     - [x] MLP
     - [x] DeepCNN
     - [x] [ResNet](https://arxiv.org/abs/1512.03385)
+    - [ ] [SqueezeNet](https://arxiv.org/abs/1602.07360)
+    - [ ] [GhostNet](https://arxiv.org/abs/1911.11907)
+    - [ ] [Squeeze-and-Excitation Networks](https://arxiv.org/abs/1709.01507.abs)
     - [ ] [Inception-v4](https://arxiv.org/abs/1602.07261)
     - [ ] [MobileNetV3](https://arxiv.org/abs/1905.02244v5)
-    - [ ] [GhostNet](https://arxiv.org/abs/1911.11907)
     - [ ] [ShuffleNet](https://arxiv.org/abs/1707.01083v2)
     - [ ] [CBAM (Convolutional Block Attention Module)](https://arxiv.org/abs/1807.06521)
     - [ ] [ViT (Vision Transformer)](https://arxiv.org/abs/2010.11929v2)
