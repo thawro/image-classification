@@ -2,7 +2,15 @@ from typing import Literal
 
 from torch import nn
 
-from src.utils.types import TensorType, _size_2_t
+from src.utils.types import Tensor, TensorType, _size_2_t
+
+
+class ResidualBlock(nn.Module):
+    def __init__(self, net: nn.Module):
+        self.net = net
+
+    def forward(self, x: Tensor) -> Tensor:
+        return x + self.net(x)
 
 
 class CNNBlock(nn.Module):

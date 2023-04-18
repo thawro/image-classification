@@ -4,26 +4,36 @@ import torch
 from torch import nn
 
 from src.architectures.feature_extractors.base import FeatureExtractor
+from src.architectures.helpers import CNNBlock
 from src.utils.types import Any, Tensor
 
 
 class FireBlock(nn.Module):
-    def __init__(self, in_channels: int, squeeze_ratio: float, expand_filters: int, pct_3x3: float):
+    def __init__(
+        self,
+        in_channels: int,
+        squeeze_ratio: float,
+        expand_filters: int,
+        pct_3x3: float,
+        is_residual: bool = False,
+    ):
         super().__init__()
         s_1x1 = int(squeeze_ratio * expand_filters)
         e_3x3 = int(expand_filters * pct_3x3)
         e_1x1 = int(expand_filters * (1 - pct_3x3))
-        self.squeeze_1x1 = nn.Conv2d(in_channels=in_channels, out_channels=s_1x1, kernel_size=1)
-        self.expand_1x1 = nn.Conv2d(in_channels=s_1x1, out_channels=e_1x1, kernel_size=1)
-        self.expand_3x3 = nn.Conv2d(in_channels=s_1x1, out_channels=e_3x3, kernel_size=3, padding=1)
-        self.relu = nn.ReLU()
+        self.squeeze_1x1 = CNNBlock(in_channels, s_1x1, kernel_size=1, use_batch_norm=True)
+        self.expand_1x1 = CNNBlock(s_1x1, e_1x1, kernel_size=1, use_batch_norm=True)
+        self.expand_3x3 = CNNBlock(s_1x1, e_3x3, kernel_size=3, padding=1, use_batch_norm=True)
+        self.is_residual = is_residual
 
     def forward(self, x: Tensor) -> Tensor:
-        squeeze_out = self.relu(self.squeeze_1x1(x))
+        squeeze_out = self.squeeze_1x1(x)
         expand_1x1_out = self.expand_1x1(squeeze_out)
         expand_3x3_out = self.expand_3x3(squeeze_out)
         out = torch.concat([expand_1x1_out, expand_3x3_out], dim=1)  # concat over channels
-        return self.relu(out)
+        if self.is_residual:
+            return x + out
+        return out
 
 
 class SqueezeNet(FeatureExtractor):
@@ -46,7 +56,7 @@ class SqueezeNet(FeatureExtractor):
         # architecture, fb - fire block
         out_channels = 96
 
-        fb_expand_filters = [base_e + (incr_e * i // freq) for i in range(8)]
+        fb_expand_filters = [base_e + (incr_e * (i // freq)) for i in range(8)]
         fb_in_channels = [out_channels] + fb_expand_filters
         self.out_channels = fb_expand_filters[-1]
         net = nn.Sequential(
@@ -55,15 +65,27 @@ class SqueezeNet(FeatureExtractor):
                     ("conv1", nn.Conv2d(in_channels, out_channels, kernel_size=7, stride=2)),
                     ("maxpool1", nn.MaxPool2d(kernel_size=3, stride=2)),
                     ("fire2", FireBlock(fb_in_channels[0], SR, fb_expand_filters[0], pct_3x3)),
-                    ("fire3", FireBlock(fb_in_channels[1], SR, fb_expand_filters[1], pct_3x3)),
+                    (
+                        "fire3",
+                        FireBlock(fb_in_channels[1], SR, fb_expand_filters[1], pct_3x3, is_residual=True),
+                    ),
                     ("fire4", FireBlock(fb_in_channels[2], SR, fb_expand_filters[2], pct_3x3)),
                     ("maxpool4", nn.MaxPool2d(kernel_size=3, stride=2)),
-                    ("fire5", FireBlock(fb_in_channels[3], SR, fb_expand_filters[3], pct_3x3)),
+                    (
+                        "fire5",
+                        FireBlock(fb_in_channels[3], SR, fb_expand_filters[3], pct_3x3, is_residual=True),
+                    ),
                     ("fire6", FireBlock(fb_in_channels[4], SR, fb_expand_filters[4], pct_3x3)),
-                    ("fire7", FireBlock(fb_in_channels[5], SR, fb_expand_filters[5], pct_3x3)),
+                    (
+                        "fire7",
+                        FireBlock(fb_in_channels[5], SR, fb_expand_filters[5], pct_3x3, is_residual=True),
+                    ),
                     ("fire8", FireBlock(fb_in_channels[6], SR, fb_expand_filters[6], pct_3x3)),
                     ("maxpool8", nn.MaxPool2d(kernel_size=3, stride=2)),
-                    ("fire9", FireBlock(fb_in_channels[7], SR, fb_expand_filters[7], pct_3x3)),
+                    (
+                        "fire9",
+                        FireBlock(fb_in_channels[7], SR, fb_expand_filters[7], pct_3x3, is_residual=True),
+                    ),
                     ("dropout9", nn.Dropout2d(p=0.5)),
                 ]
             )

@@ -76,7 +76,7 @@
     - [x] MLP
     - [x] DeepCNN
     - [x] [ResNet](https://arxiv.org/abs/1512.03385)
-    - [ ] [SqueezeNet](https://arxiv.org/abs/1602.07360)
+    - [x] [SqueezeNet](https://arxiv.org/abs/1602.07360)
     - [ ] [GhostNet](https://arxiv.org/abs/1911.11907)
     - [ ] [Squeeze-and-Excitation Networks](https://arxiv.org/abs/1709.01507.abs)
     - [ ] [Inception-v4](https://arxiv.org/abs/1602.07261)
