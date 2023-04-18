@@ -1,3 +1,5 @@
+"""SqueezeNet architecture based on https://arxiv.org/pdf/1602.07360.pdf. By default, the simple bypass version is used"""
+
 from collections import OrderedDict
 
 import torch
@@ -9,6 +11,8 @@ from src.utils.types import Any, Tensor
 
 
 class FireBlock(nn.Module):
+    """FireBlock used to squeeze and expand convolutional channels"""
+
     def __init__(
         self,
         in_channels: int,
@@ -45,6 +49,7 @@ class SqueezeNet(FeatureExtractor):
         pct_3x3: float = 0.5,
         freq: int = 2,
         SR: float = 0.125,
+        simple_bypass: bool = True,
     ):
         self.in_channels = in_channels
         self.base_e = base_e
@@ -59,34 +64,35 @@ class SqueezeNet(FeatureExtractor):
         fb_expand_filters = [base_e + (incr_e * (i // freq)) for i in range(8)]
         fb_in_channels = [out_channels] + fb_expand_filters
         self.out_channels = fb_expand_filters[-1]
+        conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=7, stride=2)
+        maxpool1 = nn.MaxPool2d(kernel_size=3, stride=2)
+        fire2 = FireBlock(fb_in_channels[0], SR, fb_expand_filters[0], pct_3x3)
+        fire3 = FireBlock(fb_in_channels[1], SR, fb_expand_filters[1], pct_3x3, simple_bypass)
+        fire4 = FireBlock(fb_in_channels[2], SR, fb_expand_filters[2], pct_3x3)
+        maxpool4 = nn.MaxPool2d(kernel_size=3, stride=2)
+        fire5 = FireBlock(fb_in_channels[3], SR, fb_expand_filters[3], pct_3x3, simple_bypass)
+        fire6 = FireBlock(fb_in_channels[4], SR, fb_expand_filters[4], pct_3x3)
+        fire7 = FireBlock(fb_in_channels[5], SR, fb_expand_filters[5], pct_3x3, simple_bypass)
+        fire8 = FireBlock(fb_in_channels[6], SR, fb_expand_filters[6], pct_3x3)
+        maxpool8 = nn.MaxPool2d(kernel_size=3, stride=2)
+        fire9 = FireBlock(fb_in_channels[7], SR, fb_expand_filters[7], pct_3x3, simple_bypass)
+        dropout9 = nn.Dropout2d(p=0.5)
         net = nn.Sequential(
             OrderedDict(
                 [
-                    ("conv1", nn.Conv2d(in_channels, out_channels, kernel_size=7, stride=2)),
-                    ("maxpool1", nn.MaxPool2d(kernel_size=3, stride=2)),
-                    ("fire2", FireBlock(fb_in_channels[0], SR, fb_expand_filters[0], pct_3x3)),
-                    (
-                        "fire3",
-                        FireBlock(fb_in_channels[1], SR, fb_expand_filters[1], pct_3x3, is_residual=True),
-                    ),
-                    ("fire4", FireBlock(fb_in_channels[2], SR, fb_expand_filters[2], pct_3x3)),
-                    ("maxpool4", nn.MaxPool2d(kernel_size=3, stride=2)),
-                    (
-                        "fire5",
-                        FireBlock(fb_in_channels[3], SR, fb_expand_filters[3], pct_3x3, is_residual=True),
-                    ),
-                    ("fire6", FireBlock(fb_in_channels[4], SR, fb_expand_filters[4], pct_3x3)),
-                    (
-                        "fire7",
-                        FireBlock(fb_in_channels[5], SR, fb_expand_filters[5], pct_3x3, is_residual=True),
-                    ),
-                    ("fire8", FireBlock(fb_in_channels[6], SR, fb_expand_filters[6], pct_3x3)),
-                    ("maxpool8", nn.MaxPool2d(kernel_size=3, stride=2)),
-                    (
-                        "fire9",
-                        FireBlock(fb_in_channels[7], SR, fb_expand_filters[7], pct_3x3, is_residual=True),
-                    ),
-                    ("dropout9", nn.Dropout2d(p=0.5)),
+                    ("conv1", conv1),
+                    ("maxpool1", maxpool1),
+                    ("fire2", fire2),
+                    ("fire3", fire3),
+                    ("fire4", fire4),
+                    ("maxpool4", maxpool4),
+                    ("fire5", fire5),
+                    ("fire6", fire6),
+                    ("fire7", fire7),
+                    ("fire8", fire8),
+                    ("maxpool8", maxpool8),
+                    ("fire9", fire9),
+                    ("dropout9", dropout9),
                 ]
             )
         )
