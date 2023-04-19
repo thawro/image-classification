@@ -28,6 +28,7 @@ class ImageDataModule(LightningDataModule):
         train_transform: _img_transform = None,
         inference_transform: _img_transform = None,
         batch_size: int = 64,
+        num_workers: int = 16,
         seed: int = 42,
     ):
         super().__init__()
@@ -36,6 +37,7 @@ class ImageDataModule(LightningDataModule):
         self.data_dir = f"{data_dir}/{self.name}"
         self.batch_size = batch_size
         self.seed = seed
+        self.num_workers = num_workers
         self.train, self.val, self.test = None, None, None
 
     def state_dict(self):
@@ -72,7 +74,7 @@ class ImageDataModule(LightningDataModule):
             self.set_test()
 
     @property
-    def n_classes(self) -> int:
+    def num_classes(self) -> int:
         return len(self.classes)
 
     @property
@@ -86,13 +88,13 @@ class ImageDataModule(LightningDataModule):
         return self.__class__.__name__.replace("DataModule", "")
 
     def train_dataloader(self):
-        return DataLoader(self.train, batch_size=self.batch_size, shuffle=True, num_workers=16)
+        return DataLoader(self.train, batch_size=self.batch_size, shuffle=True, num_workers=self.num_workers)
 
     def val_dataloader(self):
-        return DataLoader(self.val, batch_size=self.batch_size, num_workers=16)
+        return DataLoader(self.val, batch_size=self.batch_size, num_workers=self.num_workers)
 
     def test_dataloader(self):
-        return DataLoader(self.test, batch_size=self.batch_size, num_workers=16)
+        return DataLoader(self.test, batch_size=self.batch_size, num_workers=self.num_workers)
 
 
 class StaticImageDataModule(ImageDataModule):
