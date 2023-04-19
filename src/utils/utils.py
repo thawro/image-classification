@@ -7,6 +7,8 @@ from omegaconf import DictConfig, OmegaConf
 from pytorch_lightning.accelerators.cuda import CUDAAccelerator
 
 import wandb
+from src.data.datamodule import ImageDataModule
+from src.module.base import BaseImageClassifier
 from src.utils.pylogger import get_pylogger
 
 log = get_pylogger(__name__)
@@ -14,6 +16,16 @@ log = get_pylogger(__name__)
 STYLE = "dim"
 ROOT = Path(__file__).parent.parent.parent
 DATA_DIR = ROOT / "data"
+
+
+def get_params(datamodule: ImageDataModule, model: BaseImageClassifier):
+    params = {
+        "learnable_params": sum(p.numel() for p in model.parameters() if p.requires_grad),
+        "dataset": datamodule.name,
+        "model": model.name,
+    }
+    params.update(model.feature_extractor.params)
+    return params
 
 
 def print_config_tree(cfg: DictConfig, keys: list[str] | str = "all", style: str = "dim"):

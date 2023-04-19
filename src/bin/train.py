@@ -13,7 +13,7 @@ from src.utils.hydra import (
     instantiate_model,
     instantiate_trainer,
 )
-from src.utils.utils import close_loggers, print_config_tree
+from src.utils.utils import close_loggers, get_params, print_config_tree
 
 
 @hydra.main(version_base=None, config_path="../../configs", config_name="train")
@@ -28,7 +28,7 @@ def main(cfg: DictConfig):
     callbacks = instantiate_callbacks(cfg)
     logger = instantiate_logger(cfg)
     trainer = instantiate_trainer(cfg, logger=logger, callbacks=list(callbacks.values()))
-    params = {"dataset": datamodule.name, "model": model.name} | model.feature_extractor.params
+    params = get_params(datamodule, model)
     logger.log_hyperparams(params)
     trainer.fit(model, datamodule=datamodule)
 
