@@ -35,15 +35,15 @@ def instantiate_feature_extractor(cfg: DictConfig, dummy_input_shape: torch.Size
     if "mlp" in class_name.lower():  # MLP
         in_dim = dummy_input_shape.numel()
         feature_extractor = instantiate(cfg.feature_extractor)(in_dim=in_dim)
-    else:  # ResNet, DeepCNN, SqueezeNet
+    else:  # ResNet, DeepCNN, SqueezeNet, InceptionResnetV2,
         in_channels = dummy_input_shape[0]
         feature_extractor = instantiate(cfg.feature_extractor)(in_channels=in_channels)
     return feature_extractor
 
 
-def instantiate_head(cfg: DictConfig, in_dim: int, n_classes: int) -> ClassificationHead:
+def instantiate_head(cfg: DictConfig, in_dim: int, num_classes: int) -> ClassificationHead:
     log.info("Instantiating ClassificationHead..")
-    return instantiate(cfg.head, in_dim=in_dim, n_classes=n_classes)
+    return instantiate(cfg.head)(in_dim=in_dim, num_classes=num_classes)
 
 
 def instantiate_model(cfg: DictConfig, datamodule: ImageDataModule) -> BaseImageClassifier:
@@ -52,7 +52,8 @@ def instantiate_model(cfg: DictConfig, datamodule: ImageDataModule) -> BaseImage
         log.info(f"Instantiating Model from {cfg.ckpt_path} checkpoint..")
         return BaseImageClassifier.load_from_checkpoint(cfg.ckpt_path)
     feature_extractor = instantiate_feature_extractor(cfg, datamodule.train.dummy_input_shape)
-    return instantiate(cfg.model)(feature_extractor=feature_extractor, classes=datamodule.classes)
+    head = instantiate_head(cfg, in_dim=feature_extractor.out_dim, num_classes=datamodule.num_classes)
+    return instantiate(cfg.model)(feature_extractor=feature_extractor, head=head, classes=datamodule.classes)
 
 
 def instantiate_logger(cfg: DictConfig) -> WandbLoggerWrapper:

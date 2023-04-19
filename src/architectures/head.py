@@ -14,15 +14,20 @@ class ClassificationHead(nn.Module):
 
 
 class LinearClassificationHead(ClassificationHead):
-    def __init__(self, in_dim: int, num_classes: int, out_layer: nn.Module):
-        net = nn.Sequential(nn.AdaptiveAvgPool2d((1, 1)), nn.Flatten(), nn.Linear(in_dim, num_classes))
+    def __init__(self, in_dim: int, num_classes: int, out_layer: nn.Module, dropout: float = 0):
+        net = nn.Sequential(
+            nn.AdaptiveAvgPool2d((1, 1)),
+            nn.Flatten(),
+            nn.Dropout(dropout),
+            nn.Linear(in_dim, num_classes),
+        )
         super().__init__(net=net, out_layer=out_layer)
 
 
 class ConvolutionalClassificationHead(ClassificationHead):
-    def __init__(self, in_channels: int, num_classes: int, out_layer: nn.Module):
+    def __init__(self, in_dim: int, num_classes: int, out_layer: nn.Module):
         net = nn.Sequential(
-            nn.Conv2d(in_channels, num_classes, kernel_size=1),
+            nn.Conv2d(in_dim, num_classes, kernel_size=1),
             nn.AdaptiveAvgPool2d((1, 1)),
             nn.Flatten(),
         )
@@ -30,20 +35,20 @@ class ConvolutionalClassificationHead(ClassificationHead):
 
 
 class MulticlassLinearClassificationHead(LinearClassificationHead):
+    def __init__(self, in_dim: int, num_classes: int, dropout: float = 0):
+        super().__init__(in_dim, num_classes, out_layer=nn.LogSoftmax(dim=1), dropout=dropout)
+
+
+class MultilabelLinearClassificationHead(LinearClassificationHead):
+    def __init__(self, in_dim: int, num_classes: int, dropout: float = 0):
+        super().__init__(in_dim, num_classes, out_layer=nn.Sigmoid(), dropout=dropout)
+
+
+class MulticlassConvolutionalClassificationHead(ConvolutionalClassificationHead):
     def __init__(self, in_dim: int, num_classes: int):
         super().__init__(in_dim, num_classes, out_layer=nn.LogSoftmax(dim=1))
 
 
-class MultilabelLinearClassificationHead(LinearClassificationHead):
+class MultilabelConvolutionalClassificationHead(ConvolutionalClassificationHead):
     def __init__(self, in_dim: int, num_classes: int):
         super().__init__(in_dim, num_classes, out_layer=nn.Sigmoid())
-
-
-class MulticlassConvolutionalClassificationHead(ConvolutionalClassificationHead):
-    def __init__(self, in_channels: int, num_classes: int):
-        super().__init__(in_channels, num_classes, out_layer=nn.LogSoftmax(dim=1))
-
-
-class MultilabelConvolutionalClassificationHead(ConvolutionalClassificationHead):
-    def __init__(self, in_channels: int, num_classes: int):
-        super().__init__(in_channels, num_classes, out_layer=nn.Sigmoid())

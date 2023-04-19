@@ -1,34 +1,29 @@
 from torch import nn
 
 from src.architectures.feature_extractors.base import FeatureExtractor
-from src.architectures.head import (
-    MultilabelConvolutionalClassificationHead,
-    MultilabelLinearClassificationHead,
-)
+from src.architectures.head import ClassificationHead
 from src.evaluation.metrics import multilabel_classification_metrics
 from src.module.base import BaseImageClassifier
-from src.utils.types import HeadType, Outputs, Tensor
+from src.utils.types import Outputs, Tensor
 
 
 class MultilabelImageClassifier(BaseImageClassifier):
     def __init__(
         self,
         feature_extractor: FeatureExtractor,
-        head_type: HeadType,
+        head: ClassificationHead,
         classes: list[str],
-        lr: float = 1e-3,
+        lr: float = 0.01,
+        weight_decay: float = 0.01,
     ):
         num_classes = len(classes)
-        if head_type == "linear":
-            HeadClass = MultilabelLinearClassificationHead
-        else:
-            HeadClass = MultilabelConvolutionalClassificationHead
         super().__init__(
             feature_extractor=feature_extractor,
             classes=classes,
             lr=lr,
+            weight_decay=weight_decay,
             task="multilabel",
-            head=HeadClass(feature_extractor.out_dim, num_classes),
+            head=head,
             loss_fn=nn.BCELoss(reduction="none"),
             metrics=multilabel_classification_metrics(num_classes=num_classes, average="weighted"),
         )

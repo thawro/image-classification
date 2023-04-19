@@ -23,7 +23,8 @@ class BaseImageClassifier(LightningModule):
         loss_fn: nn.Module,
         metrics: MetricCollection,
         classes: list[str],
-        lr: float = 1e-3,
+        lr: float = 0.01,
+        weight_decay: float = 0.01,
     ):
         super().__init__()
         if len(classes) <= 1 or not all(isinstance(el, str) for el in classes):
@@ -36,6 +37,7 @@ class BaseImageClassifier(LightningModule):
         self.visualizer = ClassificationVisualizer(task=task, backend="plotly")
         self.num_classes = len(classes)
         self.lr = lr
+        self.weight_decay = weight_decay
         self.save_hyperparameters(ignore=["feature_extractor", "head"])
         self.outputs = {split: [] for split in SPLITS}
         self.examples = {split: {} for split in SPLITS}
@@ -114,4 +116,25 @@ class BaseImageClassifier(LightningModule):
         self._common_epoch_end("test")
 
     def configure_optimizers(self):
-        return torch.optim.AdamW(self.parameters(), lr=self.lr)
+        optimizer = torch.optim.AdamW(
+            params=self.parameters(),
+            lr=self.lr,
+            betas=(0.9, 0.999),
+            weight_decay=self.weight_decay,
+        )
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+            optimizer,
+            mode="min",
+            factor=0.7,
+            patience=7,
+            threshold=0.0001,
+        )
+        return {
+            "optimizer": optimizer,
+            "lr_scheduler": {
+                "scheduler": scheduler,
+                "monitor": "val/loss",
+                "interval": "epoch",
+                "frequency": 1,
+            },
+        }
