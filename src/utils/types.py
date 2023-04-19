@@ -19,6 +19,7 @@ _stage = Literal["train", "val", "test"]
 _img_transform = Optional[Callable[[Image.Image], Tensor]]
 _metrics_average = Literal["micro", "macro", "weighted", "none"]
 _task = Literal["binary", "multiclass", "multilabel"]
+_any_dict = dict[str, Any]
 
 
 class _StaticImageDataset(Protocol):

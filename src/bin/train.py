@@ -5,6 +5,7 @@ from omegaconf import DictConfig
 from pytorch_lightning import seed_everything
 from pytorch_lightning.callbacks import ModelCheckpoint
 
+from src.architectures.utils import get_params
 from src.bin.evaluate import evaluate
 from src.utils.hydra import (
     instantiate_callbacks,
@@ -13,7 +14,7 @@ from src.utils.hydra import (
     instantiate_model,
     instantiate_trainer,
 )
-from src.utils.utils import close_loggers, get_params, print_config_tree
+from src.utils.utils import close_loggers, print_config_tree
 
 
 @hydra.main(version_base=None, config_path="../../configs", config_name="train")
