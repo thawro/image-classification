@@ -5,3 +5,4 @@ incr_e: 128
 pct_3x3: 0.5
 freq: 2
 SR: 0.125
+simple_bypass: True

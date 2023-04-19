@@ -1,4 +1,6 @@
-"""SqueezeNet architecture based on https://arxiv.org/pdf/1602.07360.pdf. By default, the simple bypass version is used"""
+"""SqueezeNet architecture based on https://arxiv.org/pdf/1602.07360.pdf.
+By default, the simple bypass version is used
+Also, BatchNormalization is added for each squeeze and expand layers"""
 
 from collections import OrderedDict
 
