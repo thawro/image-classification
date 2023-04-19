@@ -272,6 +272,7 @@ class InceptionResNetV2(FeatureExtractor):
         self.A_in_channels = A_in_channels
         self.B_in_channels = B_in_channels
         self.C_in_channels = C_in_channels
+        self.num_features = 1536
 
         net = nn.Sequential(
             OrderedDict(
@@ -303,7 +304,17 @@ class InceptionResNetV2(FeatureExtractor):
                     (
                         f"block_C_{len(C_in_channels) - 1}",
                         InceptionResNetC(in_channels=C_in_channels[-1], scale=1.0, last_relu=False),
-                    )
+                    ),
+                    (
+                        "last_conv",
+                        CNNBlock(
+                            InceptionResNetC.out_channels,
+                            self.num_features,
+                            kernel_size=1,
+                            stride=1,
+                            padding=0,
+                        ),
+                    ),
                 ]
             )
         )
@@ -311,7 +322,7 @@ class InceptionResNetV2(FeatureExtractor):
 
     @property
     def params(self):
-        return {"scales": self.scales}
+        return {"scales": self.scales, "num_features": self.num_features}
 
     @property
     def out_dim(self) -> int:
