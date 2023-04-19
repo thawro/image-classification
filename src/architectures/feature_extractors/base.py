@@ -7,12 +7,16 @@ from src.utils.types import Any, Optional
 
 
 class FeatureExtractor(nn.Module):
-    def __init__(self, net: nn.Module):
+    def __init__(self, net: nn.Sequential):
         super().__init__()
         self.net = net
 
     def forward(self, x: TensorType["batch", "channels", "height", "width"]) -> TensorType["batch", "out_dim"]:
-        return self.net(x)
+        out = x
+        for name, module in self.net.named_children():
+            out = module(out)
+            # print(name, out.shape)
+        return out
 
     @property
     def name(self):
