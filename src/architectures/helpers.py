@@ -2,7 +2,7 @@ from typing import Literal
 
 from torch import nn
 
-from src.utils.types import Tensor, TensorType, _size_2_t
+from src.utils.types import Optional, Tensor, TensorType, _size_2_t
 
 
 class ResidualBlock(nn.Module):
@@ -23,11 +23,12 @@ class CNNBlock(nn.Module):
         kernel_size: _size_2_t,
         stride: _size_2_t = 1,
         padding: str | _size_2_t = 0,
+        groups: int = 1,
         pool_kernel_size: _size_2_t = 1,
         pool_type: Literal["Max", "Avg"] = "Max",
         use_batch_norm: bool = True,
         dropout: float = 0,
-        activation: str = "ReLU",
+        activation: Optional[str] = "ReLU",
     ):
         """
         Args:
@@ -52,9 +53,12 @@ class CNNBlock(nn.Module):
             self.use_pool = all(dim == 1 for dim in pool_kernel_size)
         self.use_batch_norm = use_batch_norm
         self.use_dropout = dropout > 0
+        self.groups = groups
 
-        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding)
-        self.activation = getattr(nn, activation)()
+        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding, groups=groups)
+        self.linear = activation is None
+        if not self.linear:
+            self.activation = getattr(nn, activation)()
         if self.use_pool:
             self.pool = getattr(nn, f"{pool_type}Pool2d")(pool_kernel_size)
 
@@ -68,7 +72,8 @@ class CNNBlock(nn.Module):
         self, x: TensorType["batch", "in_channels", "in_height", "in_width"]
     ) -> TensorType["batch", "out_channels", "out_height", "out_width"]:
         out = self.conv(x)
-        out = self.activation(out)
+        if not self.linear:
+            out = self.activation(out)
         if self.use_pool:
             out = self.pool(out)
         if self.use_batch_norm:
@@ -116,4 +121,22 @@ class FeedForwardBlock(nn.Module):
             out = self.batch_norm(out)
         if self.use_dropout:
             out = self.dropout(out)
+        return out
+
+
+class DepthwiseSeparableConvolution(nn.Module):
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        kernel_size: _size_2_t,
+        stride: _size_2_t,
+        padding: str | _size_2_t,
+    ):
+        self.depthwise = CNNBlock(in_channels, in_channels, kernel_size, stride, padding, groups=in_channels)
+        self.pointwise = CNNBlock(in_channels, out_channels, kernel_size=1, stride=1, padding=0)
+
+    def forward(self, x: Tensor) -> Tensor:
+        out = self.depthwise(x)
+        out = self.pointwise(out)
         return out

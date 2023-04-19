@@ -60,6 +60,7 @@
     - [x] CelebA
     - [ ] [COCO](https://pytorch.org/vision/main/generated/torchvision.datasets.CocoDetection)
     - [ ] [Pascal VOC](https://pytorch.org/vision/main/generated/torchvision.datasets.VOCDetection)
+    - [ ] [Stanford Dogs](http://vision.stanford.edu/aditya86/ImageNetDogs/)
 - [ ] Training and evaluation
     - [ ] Logging
         - [x] Metrics
@@ -75,9 +76,12 @@
 - [ ] Architectures
     - [x] MLP
     - [x] DeepCNN
+    - [ ] [AlexNet](https://proceedings.neurips.cc/paper_files/paper/2012/file/c399862d3b9d6b76c8436e924a68c45b-Paper.pdf)
+    - [ ] [VGG16](https://arxiv.org/abs/1409.1556)
     - [x] [ResNet](https://arxiv.org/abs/1512.03385)
     - [x] [SqueezeNet](https://arxiv.org/abs/1602.07360)
     - [x] [Inception-v4](https://arxiv.org/abs/1602.07261)
+    - [x] [MobileNetV2](https://arxiv.org/abs/1801.04381.abs)
     - [ ] [MobileNetV3](https://arxiv.org/abs/1905.02244v5)
     - [ ] [GhostNet](https://arxiv.org/abs/1911.11907)
     - [ ] [Squeeze-and-Excitation Networks](https://arxiv.org/abs/1709.01507.abs)
