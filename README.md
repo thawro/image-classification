@@ -77,10 +77,10 @@
     - [x] DeepCNN
     - [x] [ResNet](https://arxiv.org/abs/1512.03385)
     - [x] [SqueezeNet](https://arxiv.org/abs/1602.07360)
+    - [x] [Inception-v4](https://arxiv.org/abs/1602.07261)
+    - [ ] [MobileNetV3](https://arxiv.org/abs/1905.02244v5)
     - [ ] [GhostNet](https://arxiv.org/abs/1911.11907)
     - [ ] [Squeeze-and-Excitation Networks](https://arxiv.org/abs/1709.01507.abs)
-    - [ ] [Inception-v4](https://arxiv.org/abs/1602.07261)
-    - [ ] [MobileNetV3](https://arxiv.org/abs/1905.02244v5)
     - [ ] [ShuffleNet](https://arxiv.org/abs/1707.01083v2)
     - [ ] [CBAM (Convolutional Block Attention Module)](https://arxiv.org/abs/1807.06521)
     - [ ] [ViT (Vision Transformer)](https://arxiv.org/abs/2010.11929v2)
