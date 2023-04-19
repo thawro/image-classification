@@ -1,0 +1,3 @@
+_target_: src.architectures.feature_extractors.inception_v4.InceptionResNetV2
+_partial_: True # in_channels must be set
+scales: [0.17, 0.10, 0.20]
