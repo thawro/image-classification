@@ -4,7 +4,6 @@ Main idea, depthwise-separable convolutions (v1): https://arxiv.org/pdf/1704.048
 + squeeze and excite (v3): https://arxiv.org/pdf/1905.02244v5.pdf
 """
 
-import torch
 from torch import nn
 from torchvision.models._utils import _make_divisible
 
