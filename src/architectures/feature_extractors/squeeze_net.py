@@ -26,7 +26,7 @@ class FireBlock(nn.Module):
         super().__init__()
         s_1x1 = int(squeeze_ratio * expand_filters)
         e_3x3 = int(expand_filters * pct_3x3)
-        e_1x1 = int(expand_filters * (1 - pct_3x3))
+        e_1x1 = expand_filters - e_3x3
         self.squeeze_1x1 = CNNBlock(in_channels, s_1x1, kernel_size=1, use_batch_norm=True)
         self.expand_1x1 = CNNBlock(s_1x1, e_1x1, kernel_size=1, use_batch_norm=True)
         self.expand_3x3 = CNNBlock(s_1x1, e_3x3, kernel_size=3, padding=1, use_batch_norm=True)
@@ -62,22 +62,24 @@ class SqueezeNet(FeatureExtractor):
 
         # architecture, fb - fire block
         out_channels = 96
-
-        fb_expand_filters = [base_e + (incr_e * (i // freq)) for i in range(8)]
+        n_fire_blocks = 8
+        fb_expand_filters = [base_e + (incr_e * (i // freq)) for i in range(n_fire_blocks)]
         fb_in_channels = [out_channels] + fb_expand_filters
+        is_residual = [False] + [i % freq == 1 for i in range(1, n_fire_blocks)]
+        self.fb_in_channels = fb_in_channels
         self.out_channels = fb_expand_filters[-1]
         conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=7, stride=2)
         maxpool1 = nn.MaxPool2d(kernel_size=3, stride=2)
-        fire2 = FireBlock(fb_in_channels[0], SR, fb_expand_filters[0], pct_3x3)
-        fire3 = FireBlock(fb_in_channels[1], SR, fb_expand_filters[1], pct_3x3, simple_bypass)
-        fire4 = FireBlock(fb_in_channels[2], SR, fb_expand_filters[2], pct_3x3)
+        fire2 = FireBlock(fb_in_channels[0], SR, fb_expand_filters[0], pct_3x3, is_residual[0])
+        fire3 = FireBlock(fb_in_channels[1], SR, fb_expand_filters[1], pct_3x3, is_residual[1])
+        fire4 = FireBlock(fb_in_channels[2], SR, fb_expand_filters[2], pct_3x3, is_residual[2])
         maxpool4 = nn.MaxPool2d(kernel_size=3, stride=2)
-        fire5 = FireBlock(fb_in_channels[3], SR, fb_expand_filters[3], pct_3x3, simple_bypass)
-        fire6 = FireBlock(fb_in_channels[4], SR, fb_expand_filters[4], pct_3x3)
-        fire7 = FireBlock(fb_in_channels[5], SR, fb_expand_filters[5], pct_3x3, simple_bypass)
-        fire8 = FireBlock(fb_in_channels[6], SR, fb_expand_filters[6], pct_3x3)
+        fire5 = FireBlock(fb_in_channels[3], SR, fb_expand_filters[3], pct_3x3, is_residual[3])
+        fire6 = FireBlock(fb_in_channels[4], SR, fb_expand_filters[4], pct_3x3, is_residual[4])
+        fire7 = FireBlock(fb_in_channels[5], SR, fb_expand_filters[5], pct_3x3, is_residual[5])
+        fire8 = FireBlock(fb_in_channels[6], SR, fb_expand_filters[6], pct_3x3, is_residual[6])
         maxpool8 = nn.MaxPool2d(kernel_size=3, stride=2)
-        fire9 = FireBlock(fb_in_channels[7], SR, fb_expand_filters[7], pct_3x3, simple_bypass)
+        fire9 = FireBlock(fb_in_channels[7], SR, fb_expand_filters[7], pct_3x3, is_residual[7])
         dropout9 = nn.Dropout2d(p=0.5)
         net = nn.Sequential(
             OrderedDict(

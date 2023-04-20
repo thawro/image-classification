@@ -3,7 +3,7 @@ from abc import abstractmethod
 from torch import nn
 from torchtyping import TensorType
 
-from src.utils.types import Any, Optional
+from src.utils.types import Any
 
 
 class FeatureExtractor(nn.Module):
