@@ -4,6 +4,7 @@ from torch import nn
 
 from src.architectures.feature_extractors.base import FeatureExtractor
 from src.architectures.helpers import CNNBlock
+from src.architectures.utils import make_named_sequential
 from src.utils.types import Any, _size_2_t_list
 
 
@@ -52,17 +53,20 @@ class DeepCNN(FeatureExtractor):
             kernels = [kernels] * n_blocks
         if isinstance(pool_kernels, int) or isinstance(pool_kernels, tuple):
             pool_kernels = [pool_kernels] * n_blocks
-        layers = [
-            CNNBlock(
-                in_channels if i == 0 else out_channels[i - 1],
-                out_channels[i],
-                kernels[i],
-                pool_kernel_size=pool_kernels[i],
-                **fixed_params,
+        layers: list[tuple[str, nn.Module]] = [
+            (
+                f"conv_{i}",
+                CNNBlock(
+                    in_channels if i == 0 else out_channels[i - 1],
+                    out_channels[i],
+                    kernels[i],
+                    pool_kernel_size=pool_kernels[i],
+                    **fixed_params,
+                ),
             )
             for i in range(n_blocks)
         ]
-        net = nn.Sequential(*layers)
+        net = make_named_sequential(layers)
         super().__init__(net)
 
     @property

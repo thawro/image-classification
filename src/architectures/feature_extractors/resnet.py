@@ -6,9 +6,9 @@ from typing import Literal
 from torch import nn
 from torchtyping import TensorType
 
-from src.utils.types import Any, _size_2_t
-
-from .base import FeatureExtractor
+from src.architectures.feature_extractors.base import FeatureExtractor
+from src.architectures.utils import make_named_sequential
+from src.utils.types import Any, _named_modules, _size_2_t
 
 
 class BasicBlock(nn.Module):
@@ -150,7 +150,7 @@ class BasicResNetCore(nn.Module):
         """
         super().__init__()
         out_channels = in_channels
-        layers = []
+        layers: list[tuple[str, nn.Module]] = []
         for stage, n_blocks in enumerate(stages_n_blocks):
             is_first_stage = stage == 0
             blocks_layers = []
@@ -170,8 +170,8 @@ class BasicResNetCore(nn.Module):
                 blocks_layers.append(block)
             in_channels, out_channels = out_channels, in_channels * 2
             blocks_layers = nn.Sequential(*blocks_layers)
-            layers.append(blocks_layers)
-        self.net = nn.Sequential(*layers)
+            layers.append((f"stage_{stage}", blocks_layers))
+        self.net = make_named_sequential(layers)
 
     def forward(
         self, x: TensorType["batch", "in_channels", "in_height", "in_width"]
@@ -194,7 +194,7 @@ class BottleneckResNetCore(nn.Module):
         """
         super().__init__()
         mid_channels = in_channels
-        layers = []
+        layers: list[tuple[str, nn.Module]] = []
         for stage, n_blocks in enumerate(stages_n_blocks):
             is_first_stage = stage == 0
             blocks_layers = []
@@ -212,8 +212,8 @@ class BottleneckResNetCore(nn.Module):
                 blocks_layers.append(block)
             mid_channels *= 2
             blocks_layers = nn.Sequential(*blocks_layers)
-            layers.append(blocks_layers)
-        self.net = nn.Sequential(*layers)
+            layers.append((f"stage_{stage}", blocks_layers))
+        self.net = make_named_sequential(layers)
 
     def forward(
         self, x: TensorType["batch", "in_channels", "in_height", "in_width"]
@@ -251,21 +251,18 @@ class ResNet(FeatureExtractor):
         self.block_type = block_type
         self.stages_n_blocks = stages_n_blocks
         ResnetCoreBlocks = BasicResNetCore if block_type == "basic" else BottleneckResNetCore
-        net = nn.Sequential(
-            OrderedDict(
-                [
-                    (
-                        "stem_conv",
-                        nn.Conv2d(in_channels, stem_channels, stem_kernel_size, stride=2),
-                    ),
-                    ("maxpool", nn.MaxPool2d(kernel_size=pool_kernel_size, stride=2)),
-                    (
-                        "residual_layers",
-                        ResnetCoreBlocks(in_channels=stem_channels, stages_n_blocks=stages_n_blocks),
-                    ),
-                ]
-            )
-        )
+        layers: list[tuple[str, nn.Module]] = [
+            (
+                "stem_conv",
+                nn.Conv2d(in_channels, stem_channels, stem_kernel_size, stride=2),
+            ),
+            ("maxpool", nn.MaxPool2d(kernel_size=pool_kernel_size, stride=2)),
+            (
+                "residual_layers",
+                ResnetCoreBlocks(in_channels=stem_channels, stages_n_blocks=stages_n_blocks),
+            ),
+        ]
+        net = make_named_sequential(layers)
         super().__init__(net)
 
     @property

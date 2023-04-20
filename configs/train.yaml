@@ -4,7 +4,7 @@ defaults:
   - _self_
   # - callbacks: default.yaml
   - datamodule: mnist.yaml
-  - feature_extractor: mlp.yaml
+  - feature_extractor: deep_cnn.yaml
   - head: multiclass_linear.yaml
   - transforms: default.yaml
   - callbacks: default.yaml

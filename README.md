@@ -81,7 +81,7 @@
     - [x] [ResNet](https://arxiv.org/abs/1512.03385)
     - [x] [SqueezeNet](https://arxiv.org/abs/1602.07360)
     - [x] [Inception-v4](https://arxiv.org/abs/1602.07261)
-    - [x] [MobileNetV2](https://arxiv.org/abs/1801.04381.abs)
+    - [x] [MobileNetV2](https://arxiv.org/abs/1801.04381)
     - [ ] [MobileNetV3](https://arxiv.org/abs/1905.02244v5)
     - [ ] [GhostNet](https://arxiv.org/abs/1911.11907)
     - [ ] [Squeeze-and-Excitation Networks](https://arxiv.org/abs/1709.01507.abs)

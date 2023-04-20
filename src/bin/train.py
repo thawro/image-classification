@@ -5,8 +5,9 @@ from omegaconf import DictConfig
 from pytorch_lightning import seed_everything
 from pytorch_lightning.callbacks import ModelCheckpoint
 
-from src.architectures.utils import get_params
 from src.bin.evaluate import evaluate
+from src.data.datamodule import ImageDataModule
+from src.module.base import BaseImageClassifier
 from src.utils.hydra import (
     instantiate_callbacks,
     instantiate_datamodule,
@@ -15,6 +16,16 @@ from src.utils.hydra import (
     instantiate_trainer,
 )
 from src.utils.utils import close_loggers, print_config_tree
+
+
+def get_params(datamodule: ImageDataModule, model: BaseImageClassifier):
+    params = {
+        "learnable_params": sum(p.numel() for p in model.parameters() if p.requires_grad),
+        "dataset": datamodule.name,
+        "model": model.name,
+    }
+    params.update(model.feature_extractor.params)
+    return params
 
 
 @hydra.main(version_base=None, config_path="../../configs", config_name="train")

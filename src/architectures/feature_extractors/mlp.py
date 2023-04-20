@@ -2,6 +2,7 @@ from torch import nn
 
 from src.architectures.feature_extractors.base import FeatureExtractor
 from src.architectures.helpers import FeedForwardBlock
+from src.architectures.utils import make_named_sequential
 from src.utils.types import Any
 
 
@@ -32,14 +33,17 @@ class MLP(FeatureExtractor):
         self.activation = activation
         in_dims = [in_dim] + hidden_dims[:-1]
         n_layers = len(hidden_dims)
-        layers: list[nn.Module] = [
-            nn.Flatten(start_dim=1, end_dim=-1),
+        layers: list[tuple[str, nn.Module]] = [
+            ("flatten", nn.Flatten(start_dim=1, end_dim=-1)),
             *[
-                FeedForwardBlock(in_dims[i], hidden_dims[i], use_batch_norm, dropout, activation)
+                (
+                    f"feed_forward_{i}",
+                    FeedForwardBlock(in_dims[i], hidden_dims[i], use_batch_norm, dropout, activation),
+                )
                 for i in range(n_layers)
             ],
         ]
-        net = nn.Sequential(*layers)
+        net = make_named_sequential(layers)
         super().__init__(net)
 
     @property
