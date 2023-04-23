@@ -21,18 +21,19 @@ class Bottleneck(nn.Module):
         out_channels: int,
         stride: int,
         kernel_size: _size_2_t = 3,
+        use_SE: bool = False,
     ):
         super().__init__()
         self.expansion_ratio = expansion_ratio
+        self.use_SE = use_SE
+        self.use_residual = stride == 1 and in_channels == out_channels
+
         mid_channels = in_channels * expansion_ratio
         self.in_channels = in_channels
         self.mid_channels = mid_channels
         self.out_channels = out_channels
 
-        if expansion_ratio != 1:
-            self.pointwise_1 = CNNBlock(in_channels, mid_channels, kernel_size=1, activation="ReLU6")
-        else:
-            self.pointwise_1 = nn.Identity()
+        self.pointwise_1 = CNNBlock(in_channels, mid_channels, kernel_size=1, activation="ReLU6")
         self.depthwise = CNNBlock(
             mid_channels,
             mid_channels,
@@ -42,7 +43,9 @@ class Bottleneck(nn.Module):
             activation="ReLU6",
             groups=mid_channels,
         )
-        self.use_residual = stride == 1 and in_channels == out_channels
+        if use_SE:
+            pass
+            # self.squeeze_excite = SqueezeExcite() # TODO
         self.pointiwise_2 = CNNBlock(mid_channels, out_channels, kernel_size=1, activation=None)
 
     def forward(self, x: Tensor) -> Tensor:
@@ -97,3 +100,17 @@ class MobilenetV2(FeatureExtractor):
     @property
     def out_dim(self) -> int:
         return self.conv_8_channels
+
+
+class MobileNetV3Small(FeatureExtractor):
+    def __init__(self):
+        # TODO
+        net = None
+        super().__init__(net)
+
+
+class MobileNetV3Large(FeatureExtractor):
+    def __init__(self):
+        # TODO
+        net = None
+        super().__init__(net)

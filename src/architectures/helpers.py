@@ -140,3 +140,35 @@ class DepthwiseSeparableConvolution(nn.Module):
         out = self.depthwise(x)
         out = self.pointwise(out)
         return out
+
+
+class SqueezeExcitationBlock(nn.Module):
+    """Squeeze and Excitation (SE) Block based on https://arxiv.org/pdf/1709.01507.pdf
+    Use it as a wrapper for any function (nn.Module block) F_tr, which transforms input to CxHxW space.
+    """
+
+    def __init__(self, channels: int, block: nn.Module, reduction_ratio: int):
+        super().__init__()
+        self.channels = channels
+        mid_channels = channels // reduction_ratio
+        self.block = block  # C' x H' x W' -> C x H x W
+        self.mid_channels = mid_channels
+        self.reduction_ratio = reduction_ratio
+        self.squeeze = nn.Sequential(
+            nn.AdaptiveAvgPool2d((1, 1)),  # C x H x W -> C x 1 x 1
+            nn.Flatten(1, -1),  # C x 1 x 1 -> C
+        )
+        self.excitation = nn.Sequential(
+            nn.Linear(channels, mid_channels),  # C -> C/r
+            nn.ReLU(),
+            nn.Linear(mid_channels, channels),  # C/r -> C
+            nn.Sigmoid(),
+        )
+
+    def forward(self, x: Tensor) -> Tensor:
+        U = self.block(x)  # C x H x W
+        z = self.squeeze(U)  # C
+        s = self.excitation(z)  # C
+        s = s.unsqueeze(-1).unsqueeze(-1)  # C x 1 x 1
+        x_out = s * U  # C x H x W
+        return x_out

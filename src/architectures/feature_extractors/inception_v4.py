@@ -1,7 +1,7 @@
 """Inception architecture based on:
 Main idea (v1): https://arxiv.org/abs/1409.4842.abs
-+ Batch Normalization (v2): https://arxiv.org/pdf/1502.03167v3.pdf
-+ factorization ideas (v3): https://arxiv.org/abs/1512.00567
++ Batch Normalization: https://arxiv.org/pdf/1502.03167v3.pdf
++ factorization ideas and label smoothing (v2, v3): https://arxiv.org/abs/1512.00567
 + Residual connections (Inception v4): https://arxiv.org/pdf/1602.07261.pdf
 + Number of channels based on: https://github.com/huggingface/pytorch-image-models/blob/main/timm/models/inception_resnet_v2.py
 The Inception version implemented in this module is the Inception-ResNet-v2

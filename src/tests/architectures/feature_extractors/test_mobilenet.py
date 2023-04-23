@@ -9,7 +9,7 @@ from src.architectures.feature_extractors.mobilenet import MobilenetV2
 @pytest.mark.parametrize(
     "batch_X, width_mul",
     itertools.product(
-        ["inception_v4_data_batch"],
+        ["mobilenet_data_batch"],
         [0, 0.1, 0.3, 0.5, 0.7, 0.9, 1.0],  # width_mul
     ),
 )
