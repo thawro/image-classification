@@ -9,6 +9,7 @@ from torchtyping import TensorType
 import wandb
 from src.architectures.feature_extractors.base import FeatureExtractor
 from src.architectures.head import ClassificationHead
+from src.architectures.utils import make_named_sequential
 from src.evaluation.visualizers import ClassificationVisualizer
 from src.utils.namespace import SPLITS
 from src.utils.types import Outputs, Tensor, _stage, _task
@@ -29,7 +30,8 @@ class BaseImageClassifier(LightningModule):
         super().__init__()
         if len(classes) <= 1 or not all(isinstance(el, str) for el in classes):
             raise ValueError("classes must be list of strings and its length must be greater than 1")
-        self.net = nn.Sequential(feature_extractor, head)
+        layers = [("feature_extractor", feature_extractor), ("head", head)]
+        self.net = make_named_sequential(layers)
         self.task = task
 
         self.loss_fn = loss_fn

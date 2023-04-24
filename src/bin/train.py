@@ -24,7 +24,7 @@ def get_params(datamodule: ImageDataModule, model: BaseImageClassifier):
         "dataset": datamodule.name,
         "model": model.name,
     }
-    params.update(model.feature_extractor.params)
+    params.update(model.net.feature_extractor.params)
     return params
 
 

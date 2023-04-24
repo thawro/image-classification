@@ -2,6 +2,8 @@
 Main idea, depthwise-separable convolutions (v1): https://arxiv.org/pdf/1704.04861v1.pdf
 + inverted linear bottleneck (v2): https://arxiv.org/pdf/1801.04381.pdf
 + squeeze and excite (v3): https://arxiv.org/pdf/1905.02244v5.pdf
+
+TODO: check why pytorch version removes first pointwise convolution and SEBlock for last bottlenecks
 """
 
 from collections import namedtuple
