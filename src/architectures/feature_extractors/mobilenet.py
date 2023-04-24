@@ -9,14 +9,7 @@ TODO: check why pytorch version removes first pointwise convolution and SEBlock 
 from collections import namedtuple
 
 from torch import nn
-from torchvision.models import (
-    MobileNet_V2_Weights,
-    MobileNet_V3_Large_Weights,
-    MobileNet_V3_Small_Weights,
-    mobilenet_v2,
-    mobilenet_v3_large,
-    mobilenet_v3_small,
-)
+from torchvision.models import mobilenet_v2, mobilenet_v3_large, mobilenet_v3_small
 from torchvision.models._utils import _make_divisible
 
 from src.architectures.feature_extractors.base import (
@@ -317,22 +310,19 @@ class MobileNet:
     ):
         if load_from_torch:
             all_params = {
-                # load_fn, weights, out_channels
-                "v2": (mobilenet_v2, MobileNet_V2_Weights, 1280),
-                "v3_small": (mobilenet_v3_small, MobileNet_V3_Small_Weights, 1024),
-                "v3_large": (mobilenet_v3_large, MobileNet_V3_Large_Weights, 1280),
+                # load_fn, out_channels
+                "v2": (mobilenet_v2, 1280),
+                "v3_small": (mobilenet_v3_small, 1024),
+                "v3_large": (mobilenet_v3_large, 1280),
             }
-
             last_layers = [nn.AdaptiveAvgPool2d(1), nn.Flatten(1, -1)]
-            load_fn, weights, out_channels = all_params[version]
-            if pretrained:
-                _net = load_fn(weights=weights)
-            else:
-                if version in ["v3_small", "v3_large"]:  # out_channels are scaled in V3 versions
-                    out_channels = _make_divisible(out_channels * width_mul, 8)
-                _net = load_fn(width_mult=width_mul)
+            load_fn, out_channels = all_params[version]
+            params = dict(pretrained=pretrained) if pretrained else dict(width_mult=width_mul)
+            _net = load_fn(**params)
             if version in ["v3_small", "v3_large"]:
                 last_layers.extend([_net.classifier[0], _net.classifier[1]])
+                if not pretrained:  # out_channels are scaled in V3 versions
+                    out_channels = _make_divisible(out_channels * width_mul, 8)
             net = nn.Sequential(_net.features, *last_layers)
             mobilenet = ExternalFeatureExtractor(net, out_channels=out_channels)
             if freeze_extractor:
