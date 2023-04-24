@@ -53,7 +53,12 @@ class Bottleneck(nn.Module):
             groups=expansion_size,
         )
         if use_SE:
-            self.depthwise = SEBlock(depthwise_block, reduce_activation="ReLU", expand_activation="Hardsigmoid")
+            self.depthwise = SEBlock(
+                depthwise_block,
+                reduce_activation="ReLU",
+                expand_activation="Hardsigmoid",
+                reduction_ratio=4,
+            )
         else:
             self.depthwise = depthwise_block
         self.pointiwise_2 = CNNBlock(expansion_size, out_channels, kernel_size=1, activation=None)
@@ -105,7 +110,12 @@ class EfficientLastStage(OutChannelsModule):
         super().__init__()
         conv_1 = CNNBlock(in_channels, mid_channels, kernel_size=1, activation="Hardswish")
         if use_SE:
-            self.conv_1 = SEBlock(conv_1, reduce_activation="ReLU", expand_activation="Hardsigmoid")
+            self.conv_1 = SEBlock(
+                conv_1,
+                reduce_activation="ReLU",
+                expand_activation="Hardsigmoid",
+                reduction_ratio=4,
+            )
         else:
             self.conv_1 = conv_1
         self.global_pool = nn.AdaptiveAvgPool2d((1, 1))
@@ -172,28 +182,28 @@ class MobileNetV2(BaseMobileNet):
         # ]
         # kernel, exp_size, out, SE, NL, s
         bottlenecks_config = [
-            (3, 32, 16, False, "ReLU", 1),  # 0 (0)
-            (3, 96, 24, False, "ReLU", 2),  # 1 (1)
-            (3, 144, 24, False, "ReLU", 1),  # 2 (1)
-            (3, 144, 32, False, "ReLU", 2),  # 3 (2)
-            (3, 192, 32, False, "ReLU", 1),  # 4 (2)
-            (3, 192, 32, False, "ReLU", 1),  # 5 (2)
-            (3, 192, 64, False, "ReLU", 2),  # 6 (3)
-            (3, 384, 64, False, "ReLU", 1),  # 7 (3)
-            (3, 384, 64, False, "ReLU", 1),  # 8 (3)
-            (3, 384, 64, False, "ReLU", 1),  # 9 (3)
-            (3, 384, 96, False, "ReLU", 1),  # 10 (4)
-            (3, 576, 96, False, "ReLU", 1),  # 11 (4)
-            (3, 576, 96, False, "ReLU", 1),  # 12 (4)
-            (3, 576, 160, False, "ReLU", 2),  # 13 (5)
-            (3, 960, 160, False, "ReLU", 1),  # 14 (5)
-            (3, 960, 160, False, "ReLU", 1),  # 15 (5)
-            (3, 960, 320, False, "ReLU", 1),  # 16 (6) - used in last stage
+            (3, 32, 16, False, "ReLU6", 1),  # 0 (0)
+            (3, 96, 24, False, "ReLU6", 2),  # 1 (1)
+            (3, 144, 24, False, "ReLU6", 1),  # 2 (1)
+            (3, 144, 32, False, "ReLU6", 2),  # 3 (2)
+            (3, 192, 32, False, "ReLU6", 1),  # 4 (2)
+            (3, 192, 32, False, "ReLU6", 1),  # 5 (2)
+            (3, 192, 64, False, "ReLU6", 2),  # 6 (3)
+            (3, 384, 64, False, "ReLU6", 1),  # 7 (3)
+            (3, 384, 64, False, "ReLU6", 1),  # 8 (3)
+            (3, 384, 64, False, "ReLU6", 1),  # 9 (3)
+            (3, 384, 96, False, "ReLU6", 1),  # 10 (4)
+            (3, 576, 96, False, "ReLU6", 1),  # 11 (4)
+            (3, 576, 96, False, "ReLU6", 1),  # 12 (4)
+            (3, 576, 160, False, "ReLU6", 2),  # 13 (5)
+            (3, 960, 160, False, "ReLU6", 1),  # 14 (5)
+            (3, 960, 160, False, "ReLU6", 1),  # 15 (5)
+            (3, 960, 320, False, "ReLU6", 1),  # 16 (6) - used in last stage
         ]
         bottlenecks_cfg = [BottleneckConfig(*cfg) for cfg in bottlenecks_config[:-1]]
         last_btnck_cfg = BottleneckConfig(*bottlenecks_config[-1])
 
-        conv_0 = CNNBlock(in_channels, 32, kernel_size=3, stride=2, padding=1, activation="ReLU")
+        conv_0 = CNNBlock(in_channels, 32, kernel_size=3, stride=2, padding=1, activation="ReLU6")
         last_stage = OriginalLastStage(
             in_channels=_make_divisible(bottlenecks_cfg[-1].out * width_mul, self.round_nearest),
             expansion_size=last_btnck_cfg.exp_size,
@@ -211,9 +221,9 @@ class MobileNetV2(BaseMobileNet):
 class MobileNetV3Small(BaseMobileNet):
     def __init__(self, in_channels: int, width_mul: float):
         bottlenecks_config = [
-            (3, 16, 16, True, "ReLU", 2),  # 0
-            (3, 72, 24, False, "ReLU", 2),  # 1
-            (3, 88, 24, False, "ReLU", 1),  # 2
+            (3, 16, 16, True, "ReLU6", 2),  # 0
+            (3, 72, 24, False, "ReLU6", 2),  # 1
+            (3, 88, 24, False, "ReLU6", 1),  # 2
             (5, 96, 40, True, "Hardswish", 2),  # 3
             (5, 240, 40, True, "Hardswish", 1),  # 4
             (5, 240, 40, True, "Hardswish", 1),  # 5
@@ -244,12 +254,12 @@ class MobileNetV3Small(BaseMobileNet):
 class MobileNetV3Large(BaseMobileNet):
     def __init__(self, in_channels: int, width_mul: float):
         bottlenecks_config = [
-            (3, 16, 16, False, "ReLU", 1),  # 1
-            (3, 64, 24, False, "ReLU", 2),  # 2
-            (3, 72, 24, False, "ReLU", 1),  # 3
-            (5, 72, 40, True, "ReLU", 2),  # 4
-            (5, 120, 40, True, "ReLU", 1),  # 5
-            (5, 120, 40, True, "ReLU", 1),  # 6
+            (3, 16, 16, False, "ReLU6", 1),  # 1
+            (3, 64, 24, False, "ReLU6", 2),  # 2
+            (3, 72, 24, False, "ReLU6", 1),  # 3
+            (5, 72, 40, True, "ReLU6", 2),  # 4
+            (5, 120, 40, True, "ReLU6", 1),  # 5
+            (5, 120, 40, True, "ReLU6", 1),  # 6
             (3, 240, 80, False, "Hardswish", 2),  # 7
             (3, 200, 80, False, "Hardswish", 1),  # 8
             (3, 184, 80, False, "Hardswish", 1),  # 9

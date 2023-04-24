@@ -29,9 +29,9 @@ class BaseImageClassifier(LightningModule):
         super().__init__()
         if len(classes) <= 1 or not all(isinstance(el, str) for el in classes):
             raise ValueError("classes must be list of strings and its length must be greater than 1")
-        self.feature_extractor = feature_extractor
+        self.net = nn.Sequential(feature_extractor, head)
         self.task = task
-        self.head = head
+
         self.loss_fn = loss_fn
         self.classes = classes
         self.visualizer = ClassificationVisualizer(task=task, backend="plotly")
@@ -54,11 +54,10 @@ class BaseImageClassifier(LightningModule):
 
     @property
     def name(self):
-        return self.feature_extractor.name
+        return self.net[0].name
 
     def forward(self, x: TensorType["batch", "channels", "height", "width"]) -> TensorType["batch", "n_classes"]:
-        features = self.feature_extractor(x)
-        return self.head(features)
+        return self.net(x)
 
     @abstractmethod
     def _produce_outputs(self, images: Tensor, targets: Tensor) -> Outputs:

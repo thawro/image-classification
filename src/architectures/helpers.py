@@ -2,6 +2,7 @@ from abc import abstractmethod
 from typing import Literal
 
 from torch import nn
+from torchvision.models._utils import _make_divisible
 
 from src.utils.types import Optional, Tensor, TensorType, _size_2_t
 
@@ -68,16 +69,24 @@ class CNNBlock(nn.Module):
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.activation = activation
+        use_bias = not use_batch_norm
+        self.conv = nn.Conv2d(
+            in_channels,
+            out_channels,
+            kernel_size,
+            stride,
+            padding,
+            groups=groups,
+            bias=use_bias,
+        )
+        if self.use_batch_norm:
+            self.batch_norm = nn.BatchNorm2d(out_channels)
 
-        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding, groups=groups)
         self.linear = activation is None
         if not self.linear:
             self.activation_fn = getattr(nn, activation)()
         if self.use_pool:
             self.pool = getattr(nn, f"{pool_type}Pool2d")(pool_kernel_size)
-
-        if self.use_batch_norm:
-            self.batch_norm = nn.BatchNorm2d(out_channels)
 
         if self.use_dropout:
             self.dropout = nn.Dropout2d(dropout)
@@ -86,12 +95,12 @@ class CNNBlock(nn.Module):
         self, x: TensorType["batch", "in_channels", "in_height", "in_width"]
     ) -> TensorType["batch", "out_channels", "out_height", "out_width"]:
         out = self.conv(x)
+        if self.use_batch_norm:
+            out = self.batch_norm(out)
         if not self.linear:
             out = self.activation_fn(out)
         if self.use_pool:
             out = self.pool(out)
-        if self.use_batch_norm:
-            out = self.batch_norm(out)
         if self.use_dropout:
             out = self.dropout(out)
         return out
@@ -167,15 +176,17 @@ class SEBlock(nn.Module):
         reduction_ratio: int = 16,
         reduce_activation: str = "ReLU",
         expand_activation: str = "Sigmoid",
+        make_divisible_by_n: int = 8,
     ):
         super().__init__()
         channels = block.out_channels
-        self.reduce_activation = reduction_ratio
+        self.reduction_ratio = reduction_ratio
+        self.reduce_activation = reduce_activation
         self.expand_activation = expand_activation
         mid_channels = channels // reduction_ratio
+        mid_channels = _make_divisible(mid_channels, make_divisible_by_n)
         self.block = block  # C' x H' x W' -> C x H x W
         self.mid_channels = mid_channels
-        self.reduction_ratio = reduction_ratio
         self.squeeze = nn.Sequential(
             nn.AdaptiveAvgPool2d((1, 1)),  # C x H x W -> C x 1 x 1
             nn.Flatten(1, -1),  # C x 1 x 1 -> C
