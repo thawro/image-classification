@@ -1,8 +1,19 @@
+from abc import abstractmethod
 from typing import Literal
 
 from torch import nn
 
 from src.utils.types import Optional, Tensor, TensorType, _size_2_t
+
+
+class OutChannelsModule(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    @property
+    @abstractmethod
+    def out_channels(self):
+        raise NotImplementedError()
 
 
 class ResidualBlock(nn.Module):
@@ -54,11 +65,14 @@ class CNNBlock(nn.Module):
         self.use_batch_norm = use_batch_norm
         self.use_dropout = dropout > 0
         self.groups = groups
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+        self.activation = activation
 
         self.conv = nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding, groups=groups)
         self.linear = activation is None
         if not self.linear:
-            self.activation = getattr(nn, activation)()
+            self.activation_fn = getattr(nn, activation)()
         if self.use_pool:
             self.pool = getattr(nn, f"{pool_type}Pool2d")(pool_kernel_size)
 
@@ -73,7 +87,7 @@ class CNNBlock(nn.Module):
     ) -> TensorType["batch", "out_channels", "out_height", "out_width"]:
         out = self.conv(x)
         if not self.linear:
-            out = self.activation(out)
+            out = self.activation_fn(out)
         if self.use_pool:
             out = self.pool(out)
         if self.use_batch_norm:
@@ -142,14 +156,22 @@ class DepthwiseSeparableConvolution(nn.Module):
         return out
 
 
-class SqueezeExcitationBlock(nn.Module):
+class SEBlock(nn.Module):
     """Squeeze and Excitation (SE) Block based on https://arxiv.org/pdf/1709.01507.pdf
     Use it as a wrapper for any function (nn.Module block) F_tr, which transforms input to CxHxW space.
     """
 
-    def __init__(self, channels: int, block: nn.Module, reduction_ratio: int):
+    def __init__(
+        self,
+        block: CNNBlock,
+        reduction_ratio: int = 16,
+        reduce_activation: str = "ReLU",
+        expand_activation: str = "Sigmoid",
+    ):
         super().__init__()
-        self.channels = channels
+        channels = block.out_channels
+        self.reduce_activation = reduction_ratio
+        self.expand_activation = expand_activation
         mid_channels = channels // reduction_ratio
         self.block = block  # C' x H' x W' -> C x H x W
         self.mid_channels = mid_channels
@@ -160,9 +182,9 @@ class SqueezeExcitationBlock(nn.Module):
         )
         self.excitation = nn.Sequential(
             nn.Linear(channels, mid_channels),  # C -> C/r
-            nn.ReLU(),
+            getattr(nn, reduce_activation)(),
             nn.Linear(mid_channels, channels),  # C/r -> C
-            nn.Sigmoid(),
+            getattr(nn, expand_activation)(),
         )
 
     def forward(self, x: Tensor) -> Tensor:

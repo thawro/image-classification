@@ -1,3 +1,0 @@
-_target_: src.architectures.feature_extractors.mobilenet.MobilenetV2
-_partial_: True # in_channels must be set
-width_mul: 1.0
