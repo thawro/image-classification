@@ -5,6 +5,7 @@ from pytorch_lightning import LightningModule
 from torch import nn
 from torchmetrics import MetricCollection
 from torchtyping import TensorType
+from torchvision.models import mobilenet_v3_small
 
 import wandb
 from src.architectures.feature_extractors.base import FeatureExtractor
@@ -30,6 +31,7 @@ class BaseImageClassifier(LightningModule):
         super().__init__()
         if len(classes) <= 1 or not all(isinstance(el, str) for el in classes):
             raise ValueError("classes must be list of strings and its length must be greater than 1")
+        # TODO
         layers = [("feature_extractor", feature_extractor), ("head", head)]
         self.net = make_named_sequential(layers)
         self.task = task
@@ -56,6 +58,7 @@ class BaseImageClassifier(LightningModule):
 
     @property
     def name(self):
+        return "torch_v3_small"
         return self.net[0].name
 
     def forward(self, x: TensorType["batch", "channels", "height", "width"]) -> TensorType["batch", "n_classes"]:

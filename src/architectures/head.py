@@ -16,8 +16,6 @@ class ClassificationHead(nn.Module):
 class LinearClassificationHead(ClassificationHead):
     def __init__(self, in_dim: int, num_classes: int, out_layer: nn.Module, dropout: float = 0):
         net = nn.Sequential(
-            nn.AdaptiveAvgPool2d((1, 1)),
-            nn.Flatten(),
             nn.Dropout(dropout),
             nn.Linear(in_dim, num_classes),
         )
