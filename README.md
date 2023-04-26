@@ -76,8 +76,8 @@
 - [ ] Architectures
     - [x] MLP
     - [x] DeepCNN
-    - [ ] [AlexNet](https://proceedings.neurips.cc/paper_files/paper/2012/file/c399862d3b9d6b76c8436e924a68c45b-Paper.pdf)
-    - [ ] [VGG16](https://arxiv.org/abs/1409.1556)
+    <!-- - [ ] [AlexNet](https://proceedings.neurips.cc/paper_files/paper/2012/file/c399862d3b9d6b76c8436e924a68c45b-Paper.pdf) -->
+    - [x] [VGG](https://arxiv.org/abs/1409.1556)
     - [x] [ResNet](https://arxiv.org/abs/1512.03385)
     - [x] [SqueezeNet](https://arxiv.org/abs/1602.07360)
     - [ ] [InceptionV3 (Label smoothing)](https://arxiv.org/abs/1512.00567)

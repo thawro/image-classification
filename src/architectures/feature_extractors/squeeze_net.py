@@ -65,7 +65,7 @@ class SqueezeNet(FeatureExtractor):
         n_fire_blocks = 8
         fb_expand_filters = [base_e + (incr_e * (i // freq)) for i in range(n_fire_blocks)]
         fb_in_channels = [out_channels] + fb_expand_filters
-        is_residual = [False] + [i % freq == 1 for i in range(1, n_fire_blocks)]
+        is_residual = [False] + [(i % freq == 1 and simple_bypass) for i in range(1, n_fire_blocks)]
         self.fb_in_channels = fb_in_channels
         self.out_channels = fb_expand_filters[-1]
         conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=7, stride=2)

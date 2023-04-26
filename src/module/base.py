@@ -58,7 +58,6 @@ class BaseImageClassifier(LightningModule):
 
     @property
     def name(self):
-        return "torch_v3_small"
         return self.net[0].name
 
     def forward(self, x: TensorType["batch", "channels", "height", "width"]) -> TensorType["batch", "n_classes"]:
