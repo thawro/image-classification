@@ -1,5 +1,6 @@
 """Implementation based on https://arxiv.org/pdf/1512.03385.pdf
 with modifications suggested in https://github.com/pytorch/vision/blob/main/torchvision/models/resnet.py"""
+from functools import partial
 from typing import Literal
 
 import torchvision
@@ -86,6 +87,7 @@ class BottleneckBlock(nn.Module):
         kernel_size: _size_2_t,
         stride: _size_2_t,
         downsample: bool = False,
+        groups: int = 1,
     ):
         """
         Args:
@@ -104,7 +106,14 @@ class BottleneckBlock(nn.Module):
         else:
             out_channels = in_channels
         self.conv1 = CNNBlock(in_channels, mid_channels, kernel_size=1)
-        self.conv2 = CNNBlock(mid_channels, mid_channels, kernel_size=kernel_size, padding=1, stride=stride)
+        self.conv2 = CNNBlock(
+            mid_channels,
+            mid_channels,
+            kernel_size=kernel_size,
+            padding=1,
+            stride=stride,
+            groups=groups,
+        )
         self.conv3 = CNNBlock(mid_channels, out_channels, kernel_size=1, activation=None)
         self.relu = nn.ReLU()
 
@@ -168,15 +177,23 @@ class BasicResNetCore(nn.Module):
 class BottleneckResNetCore(nn.Module):
     """Core Bottleneck Residual layers"""
 
-    def __init__(self, in_channels: int, stages_n_blocks: list[int], block_class=BottleneckBlock):
+    def __init__(
+        self,
+        in_channels: int,
+        first_conv_out_channels: int,
+        stages_n_blocks: list[int],
+        groups: int = 1,
+        block_class=BottleneckBlock,
+    ):
         """
         Args:
             in_channels (int): Number of input channels.
+            first_conv_out_channels (int): TODO
             stages_n_blocks (list[int]): Number of bottleneck blocks used per stage.
         """
         super().__init__()
-        mid_channels = in_channels
         layers: list[tuple[str, nn.Module]] = []
+        mid_channels = first_conv_out_channels
         for stage, n_blocks in enumerate(stages_n_blocks):
             is_first_stage = stage == 0
             blocks_layers = []
@@ -189,6 +206,7 @@ class BottleneckResNetCore(nn.Module):
                     kernel_size=3,
                     stride=stride,
                     downsample=is_first_block,
+                    groups=groups,
                 )
                 in_channels = mid_channels * block.expansion
                 blocks_layers.append(block)
@@ -232,7 +250,11 @@ class BaseResNet(FeatureExtractor):
         self.pool_kernel_size = pool_kernel_size
         self.block_type = block_type
         self.stages_n_blocks = stages_n_blocks
-        ResnetCoreBlocks = BasicResNetCore if block_type == "basic" else BottleneckResNetCore
+        ResnetCoreBlocks = (
+            BasicResNetCore
+            if block_type == "basic"
+            else partial(BottleneckResNetCore, first_conv_out_channels=stem_channels)
+        )
         layers = [
             CNNBlock(
                 in_channels,
