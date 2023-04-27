@@ -86,7 +86,7 @@ class CNNBlock(nn.Module):
         if not self.linear:
             self.activation_fn = getattr(nn, activation)()
         if self.use_pool:
-            self.pool = getattr(nn, f"{pool_type}Pool2d")(pool_kernel_size)
+            self.pool = getattr(nn, f"{pool_type}Pool2d")(pool_kernel_size, stride=2)
 
         if self.use_dropout:
             self.dropout = nn.Dropout2d(dropout)

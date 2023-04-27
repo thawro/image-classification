@@ -2,13 +2,12 @@
 By default, the simple bypass version is used
 Also, BatchNormalization is added for each squeeze and expand layers"""
 
-from collections import OrderedDict
-
 import torch
 from torch import nn
 
 from src.architectures.feature_extractors.base import FeatureExtractor
 from src.architectures.helpers import CNNBlock
+from src.architectures.utils import make_named_sequential
 from src.utils.types import Any, Tensor
 
 
@@ -81,25 +80,22 @@ class SqueezeNet(FeatureExtractor):
         maxpool8 = nn.MaxPool2d(kernel_size=3, stride=2)
         fire9 = FireBlock(fb_in_channels[7], SR, fb_expand_filters[7], pct_3x3, is_residual[7])
         dropout9 = nn.Dropout2d(p=0.5)
-        net = nn.Sequential(
-            OrderedDict(
-                [
-                    ("conv1", conv1),
-                    ("maxpool1", maxpool1),
-                    ("fire2", fire2),
-                    ("fire3", fire3),
-                    ("fire4", fire4),
-                    ("maxpool4", maxpool4),
-                    ("fire5", fire5),
-                    ("fire6", fire6),
-                    ("fire7", fire7),
-                    ("fire8", fire8),
-                    ("maxpool8", maxpool8),
-                    ("fire9", fire9),
-                    ("dropout9", dropout9),
-                ]
-            )
-        )
+        layers = [
+            ("conv1", conv1),
+            ("maxpool1", maxpool1),
+            ("fire2", fire2),
+            ("fire3", fire3),
+            ("fire4", fire4),
+            ("maxpool4", maxpool4),
+            ("fire5", fire5),
+            ("fire6", fire6),
+            ("fire7", fire7),
+            ("fire8", fire8),
+            ("maxpool8", maxpool8),
+            ("fire9", fire9),
+            ("dropout9", dropout9),
+        ]
+        net = make_named_sequential(layers)
         super().__init__(net)
 
     @property

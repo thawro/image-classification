@@ -94,6 +94,11 @@ def vgg_data_batch() -> torch.Tensor:
     return torch.rand(BATCH_SIZE, 3, 224, 224)
 
 
+@pytest.fixture
+def resnet_data_batch() -> torch.Tensor:
+    return torch.rand(BATCH_SIZE, 3, 224, 224)
+
+
 @pytest.fixture(params=IMAGENET_TRANSFORMS)
 def cifar_dataset(request: pytest.FixtureRequest) -> StaticImageDataset:
     _size = (BATCH_SIZE, 32, 32, 3)
