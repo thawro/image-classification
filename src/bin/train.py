@@ -6,6 +6,8 @@ from pytorch_lightning import seed_everything
 from pytorch_lightning.callbacks import ModelCheckpoint
 
 from src.bin.evaluate import evaluate
+from src.data.datamodule import ImageDataModule
+from src.module.base import BaseImageClassifier
 from src.utils.hydra import (
     instantiate_callbacks,
     instantiate_datamodule,
@@ -14,6 +16,16 @@ from src.utils.hydra import (
     instantiate_trainer,
 )
 from src.utils.utils import close_loggers, print_config_tree
+
+
+def get_params(datamodule: ImageDataModule, model: BaseImageClassifier):
+    params = {
+        "learnable_params": sum(p.numel() for p in model.parameters() if p.requires_grad),
+        "dataset": datamodule.name,
+        "model": model.name,
+    }
+    params.update(model.net.feature_extractor.params)  # TODO
+    return params
 
 
 @hydra.main(version_base=None, config_path="../../configs", config_name="train")
@@ -25,10 +37,10 @@ def main(cfg: DictConfig):
     model = instantiate_model(cfg, datamodule=datamodule)
     if cfg.run_name == "auto":
         cfg.run_name = model.name
-    logger = instantiate_logger(cfg)
     callbacks = instantiate_callbacks(cfg)
+    logger = instantiate_logger(cfg)
     trainer = instantiate_trainer(cfg, logger=logger, callbacks=list(callbacks.values()))
-    params = {"dataset": datamodule.name, "model": model.name} | model.feature_extractor.params
+    params = get_params(datamodule, model)
     logger.log_hyperparams(params)
     trainer.fit(model, datamodule=datamodule)
 

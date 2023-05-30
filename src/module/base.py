@@ -5,10 +5,12 @@ from pytorch_lightning import LightningModule
 from torch import nn
 from torchmetrics import MetricCollection
 from torchtyping import TensorType
+from torchvision.models import mobilenet_v3_small
 
 import wandb
 from src.architectures.feature_extractors.base import FeatureExtractor
 from src.architectures.head import ClassificationHead
+from src.architectures.utils import make_named_sequential
 from src.evaluation.visualizers import ClassificationVisualizer
 from src.utils.namespace import SPLITS
 from src.utils.types import Outputs, Tensor, _stage, _task
@@ -23,19 +25,23 @@ class BaseImageClassifier(LightningModule):
         loss_fn: nn.Module,
         metrics: MetricCollection,
         classes: list[str],
-        lr: float = 1e-3,
+        lr: float = 0.01,
+        weight_decay: float = 0.01,
     ):
         super().__init__()
         if len(classes) <= 1 or not all(isinstance(el, str) for el in classes):
             raise ValueError("classes must be list of strings and its length must be greater than 1")
-        self.feature_extractor = feature_extractor
+        # TODO
+        layers = [("feature_extractor", feature_extractor), ("head", head)]
+        self.net = make_named_sequential(layers)
         self.task = task
-        self.head = head
+
         self.loss_fn = loss_fn
         self.classes = classes
         self.visualizer = ClassificationVisualizer(task=task, backend="plotly")
         self.num_classes = len(classes)
         self.lr = lr
+        self.weight_decay = weight_decay
         self.save_hyperparameters(ignore=["feature_extractor", "head"])
         self.outputs = {split: [] for split in SPLITS}
         self.examples = {split: {} for split in SPLITS}
@@ -52,11 +58,10 @@ class BaseImageClassifier(LightningModule):
 
     @property
     def name(self):
-        return self.feature_extractor.name
+        return self.net[0].name
 
     def forward(self, x: TensorType["batch", "channels", "height", "width"]) -> TensorType["batch", "n_classes"]:
-        features = self.feature_extractor(x)
-        return self.head(features)
+        return self.net(x)
 
     @abstractmethod
     def _produce_outputs(self, images: Tensor, targets: Tensor) -> Outputs:
@@ -114,4 +119,25 @@ class BaseImageClassifier(LightningModule):
         self._common_epoch_end("test")
 
     def configure_optimizers(self):
-        return torch.optim.AdamW(self.parameters(), lr=self.lr)
+        optimizer = torch.optim.AdamW(
+            params=self.parameters(),
+            lr=self.lr,
+            betas=(0.9, 0.999),
+            weight_decay=self.weight_decay,
+        )
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+            optimizer,
+            mode="min",
+            factor=0.7,
+            patience=7,
+            threshold=0.0001,
+        )
+        return {
+            "optimizer": optimizer,
+            "lr_scheduler": {
+                "scheduler": scheduler,
+                "monitor": "val/loss",
+                "interval": "epoch",
+                "frequency": 1,
+            },
+        }

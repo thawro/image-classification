@@ -2,7 +2,8 @@
 
 defaults:
   - override /datamodule: cifar10.yaml
-  - override /feature_extractor: mlp.yaml
+  - override /feature_extractor: deep_cnn.yaml
+  - override /head: multiclass_convolutional.yaml
   - override /model: multiclass_image_classifier.yaml
   - override /transforms:
       [

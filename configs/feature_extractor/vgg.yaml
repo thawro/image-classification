@@ -1,0 +1,7 @@
+_target_: src.architectures.feature_extractors.vgg.VGG
+_partial_: True # in_channels must be set
+version: vgg16
+use_batch_norm: True
+use_global_pool: True
+load_from_torch: False
+freeze_extractor: False

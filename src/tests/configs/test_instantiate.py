@@ -29,7 +29,7 @@ from src.evaluation.callbacks import ConfusionMatrixLogger, ExamplePredictionsLo
 from src.loggers.wandb import WandbLoggerWrapper
 from src.module import MulticlassImageClassifier, MultilabelImageClassifier
 from src.tests.utils import CONFIG_NAME, CONFIGS_PATH, create_hydra_config
-from src.utils.hydra import instantiate_feature_extractor
+from src.utils.hydra import instantiate_feature_extractor, instantiate_head
 from src.utils.types import Callable
 
 
@@ -165,8 +165,11 @@ def test_model(
             config_name=CONFIG_NAME,
             output_path=tmp_path,
         )
+        classes = ["cat", "dog"]
         feature_extractor = mlp.MLP(in_dim=128, hidden_dims=[128])
-        model = hydra.utils.instantiate(cfg.model)(feature_extractor=feature_extractor, classes=["cat", "dog"])
+        head = instantiate_head(cfg, in_dim=feature_extractor.out_dim, num_classes=len(classes))
+        model_factory = hydra.utils.instantiate(cfg.model)
+        model = model_factory(feature_extractor=feature_extractor, head=head, classes=classes)
         assert isinstance(model, expected)
 
 

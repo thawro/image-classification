@@ -4,7 +4,8 @@ defaults:
   - _self_
   # - callbacks: default.yaml
   - datamodule: mnist.yaml
-  - feature_extractor: mlp.yaml
+  - feature_extractor: deep_cnn.yaml
+  - head: multiclass_linear.yaml
   - transforms: default.yaml
   - callbacks: default.yaml
   - hydra: default.yaml
@@ -14,9 +15,6 @@ defaults:
   - trainer: default.yaml
   - experiment: null
   - debug: null
-
-datamodule:
-  batch_size: 128
 
 project_name: image_classification
 run_name: auto

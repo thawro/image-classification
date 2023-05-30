@@ -3,6 +3,7 @@
 defaults:
   - override /datamodule: celeb_a.yaml
   - override /feature_extractor: deep_cnn.yaml
+  - override /head: multilabel_linear.yaml
   - override /callbacks: default.yaml
   - override /model: multilabel_image_classifier.yaml
   - override /transforms:
@@ -12,3 +13,6 @@ defaults:
         random_horizontal_flip.yaml,
         random_rotation.yaml,
       ]
+
+datamodule:
+  batch_size: 128

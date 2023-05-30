@@ -1,0 +1,7 @@
+_target_: src.architectures.feature_extractors.mobilenet.MobileNet
+_partial_: True # in_channels must be set
+width_mul: 1.0
+version: v3_small
+load_from_torch: True
+pretrained: True
+freeze_extractor: True

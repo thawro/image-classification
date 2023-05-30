@@ -74,6 +74,31 @@ def transformed_cifar100_batch() -> torch.Tensor:
     return torch.rand(BATCH_SIZE, 3, 32, 32)
 
 
+@pytest.fixture
+def squeeze_net_data_batch() -> torch.Tensor:
+    return torch.rand(BATCH_SIZE, 3, 224, 224)
+
+
+@pytest.fixture
+def inception_v4_data_batch() -> torch.Tensor:
+    return torch.rand(BATCH_SIZE, 3, 299, 299)
+
+
+@pytest.fixture
+def mobilenet_data_batch() -> torch.Tensor:
+    return torch.rand(BATCH_SIZE, 3, 224, 224)
+
+
+@pytest.fixture
+def vgg_data_batch() -> torch.Tensor:
+    return torch.rand(BATCH_SIZE, 3, 224, 224)
+
+
+@pytest.fixture
+def resnet_data_batch() -> torch.Tensor:
+    return torch.rand(BATCH_SIZE, 3, 224, 224)
+
+
 @pytest.fixture(params=IMAGENET_TRANSFORMS)
 def cifar_dataset(request: pytest.FixtureRequest) -> StaticImageDataset:
     _size = (BATCH_SIZE, 32, 32, 3)

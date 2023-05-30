@@ -5,7 +5,7 @@ import numpy as np
 import plotly.graph_objects
 from numpy.typing import NDArray
 from PIL import Image
-from torch import Tensor
+from torch import Tensor, nn
 from torch.nn.common_types import _size_2_t
 from torchtyping import TensorType
 from torchvision.datasets import CIFAR10, CIFAR100, EMNIST, MNIST, CelebA, FashionMNIST
@@ -19,6 +19,8 @@ _stage = Literal["train", "val", "test"]
 _img_transform = Optional[Callable[[Image.Image], Tensor]]
 _metrics_average = Literal["micro", "macro", "weighted", "none"]
 _task = Literal["binary", "multiclass", "multilabel"]
+_any_dict = dict[str, Any]
+_named_modules = list[tuple[str, nn.Module]]
 
 
 class _StaticImageDataset(Protocol):

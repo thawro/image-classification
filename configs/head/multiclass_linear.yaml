@@ -1,0 +1,3 @@
+_target_: src.architectures.head.MulticlassLinearClassificationHead
+_partial_: True # in_dim and num_classes must be set
+dropout: 0.2
