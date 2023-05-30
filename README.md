@@ -37,12 +37,13 @@
         - [x] Visualizations
         - [ ] Model checkpoints + onnx
     - [ ] Training resuming
-- [x] Classification (multiclass and multilabel)
-    - [x] PytorchLightning compatible API (data and models)
-    - [x] Visualizations
-- [ ] Object detection
-- [ ] Image Segmentation
-- [ ] Image Generation
+- [ ] Computer Vision Tasks
+    - [x] Classification (multiclass and multilabel)
+        - [x] PytorchLightning compatible API (data and models)
+        - [x] Visualizations
+    - [ ] Object detection
+    - [ ] Image Segmentation
+    - [ ] Image Generation
 - [ ] Architectures
     - [x] MLP
     - [x] DeepCNN
