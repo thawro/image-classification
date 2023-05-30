@@ -2,7 +2,7 @@
 name = "image-classification"
 version = "0.1.0"
 description = ""
-authors = ["shate <tomashawro.kontakt@gmail.com>"]
+authors = ["thawro <tomaszhawro.kontakt@gmail.com>"]
 readme = "README.md"
 packages = [{ include = "src" }]
 
