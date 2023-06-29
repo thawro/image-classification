@@ -54,7 +54,7 @@
     - [x] [MobileNetV2](https://arxiv.org/abs/1801.04381)
     - [x] [Squeeze-and-Excitation Networks](https://arxiv.org/abs/1709.01507)
     - [x] [MobileNetV3](https://arxiv.org/abs/1905.02244v5)
-    - [ ] [ResNext](https://arxiv.org/abs/1611.05431)
+    - [x] [ResNext](https://arxiv.org/abs/1611.05431)
     - [ ] [GhostNet](https://arxiv.org/abs/1911.11907)
     - [ ] [GhostNetV2](https://arxiv.org/abs/1911.11907)
     - [ ] [ShuffleNet](https://arxiv.org/abs/1707.01083v2)
